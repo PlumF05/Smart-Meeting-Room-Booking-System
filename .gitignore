@@ -1,0 +1,30 @@
+# 前端依赖和构建产物
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Python 缓存、虚拟环境和本地报告
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 本地配置和密钥
+.env
+.env.*
+!.env.example
+
+# 项目生成产物、本地索引和日志
+/output/
+/backend/data/chroma/
+*.log
+
+# 系统和编辑器文件
+.DS_Store
+Thumbs.db
+.idea/
+
+.vscode/
+/docs/
