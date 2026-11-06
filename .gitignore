@@ -26,5 +26,6 @@ htmlcov/
 Thumbs.db
 .idea/
 
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 /docs/
