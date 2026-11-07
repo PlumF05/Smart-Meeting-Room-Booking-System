@@ -2,6 +2,9 @@
 
 from app.models.login_session import LoginSession
 from app.models.meeting_room import MeetingRoom
+from app.models.notification import Notification
+from app.models.operation_log import OperationLog
+from app.models.reservation import Reservation
 from app.models.user import User
 
-__all__ = ["User", "MeetingRoom", "LoginSession"]
+__all__ = ["User", "MeetingRoom", "LoginSession", "Reservation", "OperationLog", "Notification"]

@@ -1,7 +1,7 @@
 """查询与之后预约提交共用的北京时间规则；不读取或创建预约占位。"""
 
 from dataclasses import dataclass
-from datetime import date as Date, datetime, time as Time, timedelta
+from datetime import UTC, date as Date, datetime, time as Time, timedelta
 from zoneinfo import ZoneInfo
 
 
@@ -35,6 +35,20 @@ def as_beijing_now(now: datetime) -> datetime:
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("业务时钟必须提供带时区的时间")
     return now.astimezone(BEIJING)
+
+
+def to_utc_naive(value: datetime) -> datetime:
+    """将明确带时区的时刻转换为项目DATETIME列所保存的无时区UTC值。"""
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError("写入UTC时间前必须提供明确的时区")
+    return value.astimezone(UTC).replace(tzinfo=None)
+
+
+def utc_naive_to_beijing(value: datetime) -> datetime:
+    """读取约定为UTC的数据库值；先标明UTC，再转换北京展示时间。"""
+    if value.tzinfo is not None:
+        raise ValueError("数据库UTC时间应为无时区值")
+    return value.replace(tzinfo=UTC).astimezone(BEIJING)
 
 
 def validate_booking_window(
