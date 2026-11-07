@@ -15,11 +15,21 @@ import pymysql
 import pytest
 
 from app.core.config import DatabaseSettings
+from app.core import local_accounts
 from app.db import session as database_session
 
 
 BACKEND = Path(__file__).resolve().parents[1]
 OUTPUT_ROOT = BACKEND.parent / "output" / "mysql-tests"
+
+
+@pytest.fixture(autouse=True)
+def disable_local_account_recording(monkeypatch, tmp_path):
+    # 开发机可能已主动开启记录，任何测试都不得读取配置或改写其真实明文清单。
+    settings = local_accounts.LocalAccountSettings(
+        enabled=False, path=tmp_path / ".local" / "test-accounts.json",
+    )
+    monkeypatch.setattr(local_accounts, "load_local_account_settings", lambda: settings)
 
 
 @pytest.fixture(scope="module")

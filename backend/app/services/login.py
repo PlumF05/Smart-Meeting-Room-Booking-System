@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.auth_config import SESSION_LIFETIME
 from app.core.errors import DatabaseUnavailableError
+from app.core.local_accounts import record_test_account
 from app.core.security import hash_password, verify_password
 from app.models import LoginSession, User
 from app.schemas.auth import CurrentUser, LoginRequest, SessionInfo
@@ -123,6 +124,10 @@ def login_user(
             session.add(record)
             session.flush()
             result = LoginResult(info=session_info(record, user), token=raw_token)
+        record_test_account(
+            user_id=result.info.user.id, username=result.info.user.username,
+            password=data.password.get_secret_value(), source="login",
+        )
         return result
     except SQLAlchemyError:
         raise DatabaseUnavailableError() from None

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.admin_config import AdminSeedSettings
 from app.core.errors import DatabaseUnavailableError
+from app.core.local_accounts import record_test_account
 from app.core.security import hash_password
 from app.models import User
 
@@ -53,6 +54,10 @@ def seed_admin(session: Session, settings: AdminSeedSettings) -> AdminSeedResult
                 session.add(user)
                 session.flush()
                 result = AdminSeedResult(user_id=user.id, username=user.username, created=True)
+            record_test_account(
+                user_id=result.user_id, username=result.username,
+                password=settings.password.get_secret_value(), source="seed_admin",
+            )
             return result
         except IntegrityError as error:
             if not (getattr(error.orig, "args", ()) and error.orig.args[0] == 1062):

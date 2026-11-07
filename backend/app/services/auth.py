@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.errors import DatabaseUnavailableError
+from app.core.local_accounts import record_test_account
 from app.core.security import hash_password
 from app.models.user import User
 from app.schemas.auth import RegisteredUser, RegistrationRequest
@@ -39,7 +40,11 @@ def register_user(session: Session, data: RegistrationRequest) -> RegisteredUser
                 role=user.role,
                 is_active=user.is_active,
             )
-        # 离开begin块、成功提交后才返回；提交失败不能返回注册成功。
+        # 仅在数据库提交成功后记录本机测试密码；辅助文件失败不影响注册结果。
+        record_test_account(
+            user_id=result.id, username=result.username,
+            password=data.password.get_secret_value(), source="register",
+        )
         return result
     except IntegrityError as error:
         # users的唯一业务键目前只有username，1062表示与已有登录名冲突。
