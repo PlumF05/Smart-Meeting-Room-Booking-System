@@ -51,6 +51,7 @@ async function retrySession() {
         <div v-if="auth.isAuthenticated" class="header-account">
           <nav class="workspace-nav" aria-label="工作区导航">
             <RouterLink :to="{ name: homeRoute }">工作台</RouterLink>
+            <RouterLink :to="{ name: 'rooms' }">会议室查询</RouterLink>
             <RouterLink :to="{ name: 'account' }">账号信息</RouterLink>
           </nav>
           <span class="header-user" :title="auth.user?.full_name">{{ auth.user?.full_name }}</span>

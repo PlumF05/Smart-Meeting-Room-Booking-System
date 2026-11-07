@@ -12,6 +12,7 @@ from app.api.errors import (
     request_validation_error_handler,
 )
 from app.api.health import router as health_router
+from app.api.rooms import router as rooms_router
 from app.api.workspace import router as workspace_router
 from app.core.errors import DatabaseUnavailableError
 from app.services.login import InvalidCredentialsError, InvalidCsrfError, InvalidSessionError
@@ -19,7 +20,7 @@ from app.services.login import InvalidCredentialsError, InvalidCsrfError, Invali
 
 app = FastAPI(
     title="SMRBS API",
-    description="学院智能会议室预约系统：健康检查、注册与数据库登录会话。",
+    description="学院智能会议室预约系统：健康检查、注册登录与会议室资料查询。",
     version="0.1.0",
 )
 app.add_exception_handler(RequestValidationError, request_validation_error_handler)
@@ -30,9 +31,9 @@ app.add_exception_handler(InvalidCsrfError, invalid_csrf_error_handler)
 
 
 @app.middleware("http")
-async def prevent_auth_response_caching(request: Request, call_next):
+async def prevent_private_response_caching(request: Request, call_next):
     response = await call_next(request)
-    if request.url.path.startswith(("/api/auth/", "/api/workspaces/")):
+    if request.url.path.startswith(("/api/auth/", "/api/workspaces/", "/api/rooms")):
         response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -40,3 +41,4 @@ async def prevent_auth_response_caching(request: Request, call_next):
 app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(workspace_router)
+app.include_router(rooms_router)

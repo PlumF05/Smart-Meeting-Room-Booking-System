@@ -97,7 +97,10 @@ onBeforeUnmount(() => { requestVersion += 1 })
           <div><dt>当前账号</dt><dd>{{ context.user.username }}</dd></div>
           <div><dt>身份</dt><dd>{{ context.user.role === 'admin' ? '管理员' : context.user.identity_type === 'teacher' ? '教师' : '学生' }}</dd></div>
         </dl>
-        <p class="workspace-availability">{{ role === 'admin' ? '审批与资源维护功能尚未开放。' : '预约与查询功能尚未开放。' }}</p>
+        <div class="workspace-availability">
+          <RouterLink class="profile-link" :to="{ name: 'rooms' }">查询会议室</RouterLink>
+          <p>{{ role === 'admin' ? '审批与资源维护功能尚未开放。' : '可以查询会议室资料，预约申请功能尚未开放。' }}</p>
+        </div>
       </template>
     </section>
   </section>
