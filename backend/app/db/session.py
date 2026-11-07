@@ -4,9 +4,11 @@ from collections.abc import Generator
 from functools import lru_cache
 
 from sqlalchemy import URL, Engine, create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import DatabaseSettings, load_database_settings
+from app.core.errors import DatabaseUnavailableError
 
 
 def build_database_url(settings: DatabaseSettings) -> URL:
@@ -52,5 +54,9 @@ def get_session_factory() -> sessionmaker[Session]:
 def get_db() -> Generator[Session, None, None]:
     # 这里只交付和关闭Session，不自动提交；未提交的事务在关闭时回滚。
     # 之后写业务由服务使用 with session.begin() 决定原子操作的边界。
-    with get_session_factory()() as session:
+    try:
+        session_factory = get_session_factory()
+    except (OSError, ValueError, SQLAlchemyError):
+        raise DatabaseUnavailableError() from None
+    with session_factory() as session:
         yield session

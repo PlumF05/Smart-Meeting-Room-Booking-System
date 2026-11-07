@@ -1,181 +1,112 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ElDialog } from 'element-plus'
-import { rooms } from './rooms.js'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { ElAlert, ElButton } from 'element-plus'
+import BrandMark from './components/BrandMark.vue'
+import { getErrorMessage } from './api/http'
+import { useAuthStore } from './stores/auth'
+import { homeRouteFor } from './router/permissions.ts'
 
-const today = new Date()
-const todayLabel = new Intl.DateTimeFormat('zh-CN', {
-  month: 'long', day: 'numeric', weekday: 'long',
-}).format(today)
-const localDate = [today.getFullYear(), today.getMonth() + 1, today.getDate()]
-  .map(value => String(value).padStart(2, '0')).join('-')
-const date = ref(localDate)
-const start = ref('14:00')
-const end = ref('15:00')
-const people = ref(4)
-const onlyAvailable = ref(false)
-const view = ref('rooms')
-const selected = ref(null)
-const dialogOpen = ref(false)
-const notice = ref('')
-const purpose = ref('')
-const bookings = ref([])
-const demoOccupancy = [{ roomId: rooms[0].id, date: localDate, start: '14:00', end: '15:30' }]
+const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+const signingOut = ref(false)
+const actionError = ref('')
+const publicPage = computed(() => route.meta.guestOnly === true)
+const homeRoute = computed(() => auth.user ? homeRouteFor(auth.user.role) : 'login')
 
-const slots = Array.from({ length: 57 }, (_, index) => {
-  const minutes = 480 + index * 15
-  return [Math.floor(minutes / 60), minutes % 60]
-    .map(value => String(value).padStart(2, '0')).join(':')
-})
-const minutes = value => Number(value.slice(0, 2)) * 60 + Number(value.slice(3))
-const overlaps = (booking, buffer = 0) => booking.date === date.value
-  && minutes(start.value) < minutes(booking.end) + buffer
-  && minutes(end.value) + buffer > minutes(booking.start)
-const conflict = room => [...demoOccupancy, ...bookings.value]
-  .some(booking => booking.roomId === room.id && overlaps(booking, 10))
-const valid = computed(() => Boolean(date.value) && date.value >= localDate
-  && Number.isInteger(people.value) && people.value >= 1 && people.value <= 999
-  && minutes(end.value) > minutes(start.value)
-  && minutes(end.value) - minutes(start.value) <= 240)
-const matches = computed(() => rooms.filter(room => room.capacity >= people.value
-  && (!onlyAvailable.value || (valid.value && !conflict(room)))))
-const availableCount = computed(() => valid.value
-  ? rooms.filter(room => room.capacity >= people.value && !conflict(room)).length : 0)
-
-function openBooking(room) {
-  selected.value = room
-  purpose.value = ''
-  dialogOpen.value = true
-}
-
-function book() {
-  if (!valid.value || conflict(selected.value) || !purpose.value.trim()) return
-  if (bookings.value.some(booking => overlaps(booking))) {
-    notice.value = '你在该时段已有预约，请调整时间。'
-    dialogOpen.value = false
-    return
+async function signOut() {
+  if (signingOut.value) return
+  signingOut.value = true
+  actionError.value = ''
+  try {
+    await auth.logout()
+    await router.replace({ name: 'login' })
+  } catch (error) {
+    actionError.value = getErrorMessage(error)
+  } finally {
+    signingOut.value = false
   }
-  bookings.value.push({
-    id: crypto.randomUUID(),
-    roomId: selected.value.id,
-    roomName: selected.value.name,
-    date: date.value,
-    start: start.value,
-    end: end.value,
-    people: people.value,
-    purpose: purpose.value.trim(),
-  })
-  dialogOpen.value = false
-  notice.value = '预约申请已添加，可在「我的预约」中查看。'
-  view.value = 'bookings'
 }
 
-function cancel(id) {
-  bookings.value = bookings.value.filter(booking => booking.id !== id)
-  notice.value = '预约已取消。'
-}
-
-function switchView(next) {
-  notice.value = ''
-  view.value = next
+async function retrySession() {
+  actionError.value = ''
+  try {
+    await auth.restoreSession(true)
+    await router.replace({ name: auth.isAuthenticated ? homeRoute.value : 'login' })
+  } catch {
+    // 会话恢复错误由store保留，页面继续显示可重试提示。
+  }
 }
 </script>
 
 <template>
-  <header class="top">
-    <div class="top-inner">
-      <div class="brand">
-        <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19V6l8-3 8 3v13M2 19h20M9 19v-5h6v5M8 8h2m4 0h2m-8 3h2m4 0h2"/></svg></span>
-        <span>学院会议室预约 <small>SMRBS</small></span>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="header-inner">
+        <RouterLink class="brand" :to="{ name: homeRoute }" aria-label="学院会议室预约首页">
+          <span class="brand-mark"><BrandMark /></span>
+          <span class="brand-name">学院会议室预约<span class="brand-abbreviation">SMRBS</span></span>
+        </RouterLink>
+        <div v-if="auth.isAuthenticated" class="header-account">
+          <nav class="workspace-nav" aria-label="工作区导航">
+            <RouterLink :to="{ name: homeRoute }">工作台</RouterLink>
+            <RouterLink :to="{ name: 'account' }">账号信息</RouterLink>
+          </nav>
+          <span class="header-user" :title="auth.user?.full_name">{{ auth.user?.full_name }}</span>
+          <ElButton :loading="signingOut" :disabled="signingOut || auth.restoring" @click="signOut">退出登录</ElButton>
+        </div>
+        <nav v-else class="account-nav" aria-label="账号导航">
+          <RouterLink :to="{ name: 'login' }">登录</RouterLink>
+          <RouterLink :to="{ name: 'register' }">注册</RouterLink>
+        </nav>
       </div>
-      <nav aria-label="主导航">
-        <button type="button" :aria-current="view === 'rooms' ? 'page' : undefined" @click="switchView('rooms')">会议室</button>
-        <button type="button" :aria-current="view === 'bookings' ? 'page' : undefined" @click="switchView('bookings')">我的预约 <span v-if="bookings.length" class="badge">{{ bookings.length }}</span></button>
-      </nav>
+    </header>
+
+    <div class="status-region" aria-live="polite">
+      <div v-if="auth.restoreError" class="session-banner" role="alert">
+        <p>{{ auth.restoreError }}</p>
+        <ElButton size="small" :loading="auth.restoring" :disabled="auth.restoring" @click="retrySession">重新连接</ElButton>
+      </div>
+      <ElAlert v-if="actionError" class="action-alert" :title="actionError" type="error" show-icon @close="actionError = ''" />
     </div>
-  </header>
 
-  <main class="shell">
-    <section class="intro">
-      <div>
-        <p class="date">{{ todayLabel }}</p>
-        <h1>{{ view === 'rooms' ? '预约学院会议室' : '我的预约' }}</h1>
-        <p class="subtitle">{{ view === 'rooms' ? '按时段与人数查找适合的会议室。' : '查看本次演示中提交的预约申请。' }}</p>
+    <main :class="publicPage ? 'auth-layout' : 'account-layout'">
+      <aside v-if="publicPage" class="auth-story" aria-label="学院会议室预约">
+        <div class="story-copy">
+          <p class="story-intro">学院里的讨论，从这里开始</p>
+          <h1>让讨论<br />有处可去。</h1>
+          <p class="story-description">教师与学生均可注册普通账号，<br class="desktop-break" />按照相同规则使用学院会议室。</p>
+        </div>
+        <svg class="room-plan" viewBox="0 0 420 220" fill="none" aria-hidden="true">
+          <path d="M21 25H399V195H21V25Z" stroke="currentColor" stroke-width="1.5" />
+          <path d="M36 40H384V180H36V40ZM148 40V180M272 40V180" stroke="currentColor" stroke-width="1.3" />
+          <path d="M148 40H272V180H148V40Z" fill="#245369" stroke="#b1d8d8" stroke-width="1.7" />
+          <g stroke="#c0dddd" stroke-width="1.5">
+            <rect x="62" y="76" width="60" height="66" rx="12" />
+            <rect x="178" y="70" width="65" height="78" rx="12" />
+            <rect x="298" y="76" width="60" height="66" rx="12" />
+            <path d="M77 67H107M77 151H107M54 91V127M130 91V127M194 61H227M194 157H227M169 88V131M252 88V131M313 67H343M313 151H343M290 91V127M366 91V127" stroke-linecap="round" />
+          </g>
+          <path d="M48 166H136M160 166H260M284 166H372" stroke="currentColor" stroke-dasharray="3 5" />
+          <path d="M21 208H399M8 25V195" stroke="currentColor" stroke-width="1" opacity=".6" />
+          <path d="M21 204V212M399 204V212M4 25H12M4 195H12" stroke="currentColor" opacity=".6" />
+        </svg>
+        <div class="story-note"><span class="story-note-line" aria-hidden="true"></span><p>一个账号，开启你的会议安排。</p></div>
+      </aside>
+
+      <div :class="publicPage ? 'auth-content' : 'account-content'">
+        <div v-if="auth.restoring && !route.name" class="initial-loading" role="status">正在确认登录状态…</div>
+        <RouterView v-else />
       </div>
-      <svg class="plan" viewBox="0 0 350 148" fill="none" aria-hidden="true">
-        <path d="M15 12h322v124H15zM30 26h292v96H30zM125 26v96m90-96v96" stroke="#70a8b6" stroke-width="1.3"/>
-        <path d="M215 26h107v96H215z" fill="#28566b" stroke="#8bced0" stroke-width="1.5"/>
-        <g stroke="#8bced0" stroke-width="1.3"><rect x="56" y="55" width="45" height="36" rx="9"/><rect x="149" y="51" width="42" height="44" rx="8"/><rect x="244" y="49" width="48" height="49" rx="10"/><path d="M258 42h21m-21 63h21m-43-43v23m64-23v23M65 49h27M65 97h27m65-52h26m-26 56h26"/></g>
-        <path d="M48 113h52m48 0h43m53 0h48" stroke="#70a8b6" stroke-dasharray="3 4"/>
-      </svg>
-    </section>
+    </main>
 
-    <p v-if="notice" class="notice" role="status">{{ notice }}</p>
-
-    <template v-if="view === 'rooms'">
-      <section class="filters" aria-label="会议室筛选">
-        <label>预约日期 <input v-model="date" type="date" :min="localDate" /></label>
-        <label>开始时间 <select v-model="start"><option v-for="slot in slots.slice(0, -1)" :key="slot">{{ slot }}</option></select></label>
-        <label>结束时间 <select v-model="end"><option v-for="slot in slots.slice(1)" :key="slot">{{ slot }}</option></select></label>
-        <label>参会人数 <input v-model.number="people" type="number" min="1" max="999" /></label>
-        <label class="checkbox"><input v-model="onlyAvailable" type="checkbox" /> 仅显示可预约</label>
-      </section>
-      <p v-if="!valid" class="error" role="alert">请填写有效日期和人数，并选择不超过 4 小时的时段。</p>
-
-      <section class="directory" aria-labelledby="directory-title">
-        <div class="section-head">
-          <h2 id="directory-title">会议室一览</h2>
-          <span>{{ valid ? availableCount + ' 间可预约' : '请选择有效时段' }}</span>
-        </div>
-        <p v-if="!matches.length" class="empty">没有符合条件的会议室。可以减少人数、调整时段或取消「仅显示可预约」。</p>
-        <article v-for="room in matches" :key="room.id" class="room">
-          <div class="room-code" :class="room.tone">{{ room.id }}</div>
-          <div class="room-info">
-            <h3>{{ room.name }}</h3>
-            <p>{{ room.building }} <span aria-hidden="true">/</span> 容纳 {{ room.capacity }} 人</p>
-            <ul class="tags" aria-label="设备"><li v-for="item in room.equipment" :key="item">{{ item }}</li></ul>
-          </div>
-          <div class="room-action">
-            <span class="status" :class="{ busy: !valid || conflict(room) }">{{ !valid ? '时段待确认' : conflict(room) ? '时段冲突' : '可预约' }}</span>
-            <button type="button" class="primary" :disabled="!valid || conflict(room)" @click="openBooking(room)">申请预约</button>
-          </div>
-        </article>
-      </section>
-    </template>
-
-    <section v-else class="directory" aria-labelledby="bookings-title">
-      <div class="section-head"><h2 id="bookings-title">预约记录</h2><span>{{ bookings.length }} 条申请</span></div>
-      <div v-if="!bookings.length" class="empty">
-        <p>你还没有预约记录。</p>
-        <button type="button" class="primary" @click="switchView('rooms')">查找会议室</button>
-      </div>
-      <article v-for="booking in bookings" :key="booking.id" class="room">
-        <div class="room-code blue">{{ booking.roomId }}</div>
-        <div class="room-info">
-          <h3>{{ booking.roomName }}</h3>
-          <p>{{ booking.date }} / {{ booking.start }}–{{ booking.end }} / {{ booking.people }} 人</p>
-          <p class="purpose">{{ booking.purpose }}</p>
-        </div>
-        <div class="room-action">
-          <span class="status pending">待审批</span>
-          <button type="button" class="secondary" @click="cancel(booking.id)">取消预约</button>
-        </div>
-      </article>
-    </section>
-
-    <footer>课程项目演示 · 预约记录仅保留在当前页面</footer>
-  </main>
-
-  <ElDialog v-model="dialogOpen" title="确认预约申请" width="min(450px, 92vw)">
-    <div v-if="selected" class="dialog-content">
-      <strong>{{ selected.name }}</strong>
-      <p>{{ date }} / {{ start }}–{{ end }} / {{ people }} 人</p>
-      <label>会议用途 <input v-model="purpose" placeholder="例如：课程小组讨论" maxlength="100" /></label>
-    </div>
-    <template #footer>
-      <button type="button" class="secondary" @click="dialogOpen = false">返回</button>
-      <button type="button" class="primary" :disabled="!purpose.trim()" @click="book">提交申请</button>
-    </template>
-  </ElDialog>
+    <footer class="site-footer">学院智能会议室预约系统<span aria-hidden="true"> / </span>Smart Meeting Room Booking System</footer>
+  </div>
 </template>
 
+<style scoped>
+.workspace-nav { display: flex; align-items: center; gap: 22px; }
+.workspace-nav a { padding: 9px 0; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; text-decoration: none; white-space: nowrap; }
+.workspace-nav a.router-link-active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 600; }
+</style>

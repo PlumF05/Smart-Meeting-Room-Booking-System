@@ -1,4 +1,4 @@
-"""账号资料；登录会话、注册校验和权限服务在后续阶段实现。"""
+"""账号资料；启停状态与会话版本参与每次登录身份检查。"""
 
 from datetime import datetime
 
@@ -38,7 +38,7 @@ class User(Base):
         String(16, collation="utf8mb4_0900_as_cs")
     )
     is_active: Mapped[bool] = mapped_column(Boolean, server_default=text("1"))
-    # 停用账号时将递增该值；本轮只建字段，不声称已实现会话撤销。
+    # 停用服务须在同一事务递增版本并撤销会话，重新启用不能回退版本。
     session_version: Mapped[int] = mapped_column(Integer, server_default=text("1"))
     # DATETIME不保存时区：统一存UTC，之后业务时间按北京时间转换和校验。
     created_at: Mapped[datetime] = mapped_column(
