@@ -64,6 +64,23 @@ def query_window(
     )
 
 
+@router.get("/{room_id}/occupancy", summary="查询会议室时段占位")
+def room_occupancy(
+    room_id: Annotated[int, Path(ge=1, le=9223372036854775807)],
+    criteria: Annotated[RoomWindowQuery, Query()],
+    session: Annotated[Session, Depends(get_db)],
+):
+    from app.services.room_occupancy import read_occupancy
+    if criteria.date is None:
+        raise HTTPException(status_code=422, detail="请同时填写日期、开始时间和结束时间。")
+    try:
+        return read_occupancy(session, room_id, criteria)
+    except RoomNotFoundError:
+        raise HTTPException(status_code=404, detail="会议室不存在。") from None
+    except BookingTimeError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from None
+
+
 @router.get(
     "/{room_id}", response_model=RoomInfo, summary="查看指定会议室基础资料",
     responses={404: {"description": "会议室不存在"}},

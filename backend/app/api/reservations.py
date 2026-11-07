@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Path, status
 from sqlalchemy.orm import Session
 
 from app.api.auth_dependencies import require_regular_user, require_trusted_origin
@@ -67,3 +67,39 @@ def submit_reservation(
         raise HTTPException(status_code=409, detail="当前会议室在所选时段已有预约。") from None
     except (BookingTimeError, ReservationRuleError) as error:
         raise HTTPException(status_code=422, detail=str(error)) from None
+
+
+from pydantic import BaseModel, ConfigDict, Field
+from app.services.my_reservations import read_mine, cancel_mine, ReservationNotFoundError, CancellationConflictError
+
+
+class CancelRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    reason: str | None = Field(default=None, max_length=1000)
+
+
+@router.get("", summary="查询本人预约")
+def my_list(user: Annotated[CurrentUser, Depends(require_regular_user)], session: Annotated[Session, Depends(get_db)]):
+    return read_mine(session, user.id)
+
+
+@router.get("/{reservation_id}", summary="查询本人预约详情")
+def my_detail(reservation_id: Annotated[int, Path(ge=1, le=9223372036854775807)], user: Annotated[CurrentUser, Depends(require_regular_user)], session: Annotated[Session, Depends(get_db)]):
+    try:
+        return read_mine(session, user.id, reservation_id)
+    except ReservationNotFoundError:
+        raise HTTPException(404, "预约不存在。") from None
+
+
+@router.post("/{reservation_id}/cancel", summary="开始前取消本人预约")
+def cancel(reservation_id: Annotated[int, Path(ge=1, le=9223372036854775807)], data: CancelRequest, request: Request,
+           user: Annotated[CurrentUser, Depends(require_regular_user)], session: Annotated[Session, Depends(get_db)],
+           csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None):
+    try:
+        return cancel_mine(session, user.id, reservation_id, request.cookies.get(SESSION_COOKIE_NAME), csrf_token, data.reason.strip() or None if data.reason else None)
+    except ReservationNotFoundError:
+        raise HTTPException(404, "预约不存在。") from None
+    except CancellationConflictError:
+        raise HTTPException(409, "仅可在开始前取消未审批或已批准的本人预约。") from None
+    except ReservationPermissionError:
+        raise HTTPException(403, "当前账号无权取消预约。") from None

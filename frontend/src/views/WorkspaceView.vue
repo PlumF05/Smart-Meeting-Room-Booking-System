@@ -99,7 +99,7 @@ onBeforeUnmount(() => { requestVersion += 1 })
         </dl>
         <div class="workspace-availability">
           <RouterLink class="profile-link" :to="{ name: 'rooms' }">查询会议室</RouterLink>
-          <p>{{ role === 'admin' ? '审批与资源维护功能尚未开放。' : '可以查询会议室资料，预约申请功能尚未开放。' }}</p>
+          <p>{{ role === 'admin' ? '审批与资源维护功能尚未开放。' : '可以查询会议室、提交预约，并在“我的预约”查看或取消申请。' }}</p>
         </div>
       </template>
     </section>

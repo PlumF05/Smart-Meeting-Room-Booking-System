@@ -7,9 +7,17 @@ import {
 } from 'element-plus'
 import { useAuthStore } from '../stores/auth.ts'
 import { useRoomBrowser } from '../composables/useRoomBrowser.ts'
+import BookingDialog from '../components/BookingDialog.vue'
+import { ref, reactive } from 'vue'
+import type { RoomInfo } from '../types/rooms.ts'
 import { roomTimeOptions } from '../composables/roomWindow.ts'
 
+const bookingDraft = reactive({ title: '', purpose: '', attendees: 1, date: '', start_time: '', end_time: '', required_equipment: [] as string[] })
+function clearBookingDraft() { Object.assign(bookingDraft, { title: '', purpose: '', attendees: 1, date: '', start_time: '', end_time: '', required_equipment: [] }) }
+const selectedRoom = ref<RoomInfo | null>(null)
 const auth = useAuthStore()
+watch(() => [auth.user?.id, auth.status, auth.sessionChangeCount], () => { selectedRoom.value = null; clearBookingDraft() })
+
 const router = useRouter()
 const {
   draft, rooms, equipmentOptions, loading, errorMessage, hasLoaded, appliedFilters,
@@ -151,8 +159,8 @@ function updateDetailVisibility(visible: boolean) {
           <ElTableColumn label="资源状态" width="102">
             <template #default="{ row }"><span class="resource-state" :class="{ inactive: !row.is_active }">{{ row.is_active ? '启用' : '停用' }}</span></template>
           </ElTableColumn>
-          <ElTableColumn label="操作" width="108" align="right">
-            <template #default="{ row }"><ElButton link type="primary" :aria-label="`查看${row.name}详情`" @click="openDetail(row.id)">查看详情</ElButton></template>
+          <ElTableColumn label="操作" width="190" align="right">
+            <template #default="{ row }"><ElButton link type="primary" :aria-label="`查看${row.name}详情`" @click="openDetail(row.id)">查看详情</ElButton><ElButton v-if="auth.user?.role === 'user'" link type="primary" :disabled="!row.is_active" @click="selectedRoom = rooms.find(room => room.id === row.id) ?? null">预约</ElButton></template>
           </ElTableColumn>
         </ElTable>
       </template>
@@ -176,6 +184,7 @@ function updateDetailVisibility(visible: boolean) {
       </template>
       <template #footer><ElButton @click="closeDetail">关闭</ElButton></template>
     </ElDialog>
+    <BookingDialog v-if="selectedRoom" :key="selectedRoom.id" :room="selectedRoom" :draft="bookingDraft" @submitted="clearBookingDraft" @close="selectedRoom = null" />
   </section>
 </template>
 
