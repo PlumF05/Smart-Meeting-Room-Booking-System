@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 import { ElDialog, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElButton, ElAlert } from 'element-plus'
 import type { RoomInfo } from '../types/rooms.ts'
 import { useAuthStore } from '../stores/auth.ts'
@@ -16,12 +16,14 @@ const occupancy = ref('')
 let generation = 0
 watch(() => [auth.user?.id, auth.status, auth.sessionChangeCount], () => { generation++; emit('close') })
 watch(() => [form.date, form.start_time, form.end_time], () => { generation++; occupancy.value = '' })
+onUnmounted(() => { generation++ })
 
 async function checkOccupancy() {
   if (busy.value) return
   const version = generation
   busy.value = true
   message.value = ''
+  occupancy.value = ''
   try {
     const { data } = await http.get<{ available: boolean; is_active: boolean; occupancy: { status: string; starts_at: string; ends_at: string }[] }>(`/rooms/${props.room.id}/occupancy`, {
       params: { date: form.date, start_time: form.start_time, end_time: form.end_time },
@@ -39,6 +41,7 @@ async function submit() {
   if (busy.value || success.value) return
   busy.value = true
   message.value = ''
+  occupancy.value = ''
   const version = generation
   try {
     const { data } = await http.post<{ id: number }>('/reservations', { ...form, room_id: props.room.id }, { headers: { 'X-CSRF-Token': auth.csrfToken } })
@@ -57,7 +60,8 @@ async function submit() {
     <ElForm label-position="top" :disabled="busy || success" @submit.prevent="submit">
       <ElFormItem label="会议主题"><ElInput v-model="form.title" maxlength="200" /></ElFormItem>
       <ElFormItem label="用途"><ElInput v-model="form.purpose" type="textarea" maxlength="1000" /></ElFormItem>
-      <ElFormItem label="预计人数"><ElInputNumber v-model="form.attendees" :min="1" :max="room.capacity" :precision="0" /></ElFormItem>
+      <!-- 换房时保留原人数，避免控件按新房间容量静默降低需求；容量由后端复验。 -->
+      <ElFormItem label="预计人数"><ElInputNumber v-model="form.attendees" :min="1" :max="2147483647" :precision="0" /></ElFormItem>
       <ElFormItem label="使用日期"><ElInput v-model="form.date" type="date" /></ElFormItem>
       <ElFormItem label="开始时间"><ElInput v-model="form.start_time" type="time" step="1800" /></ElFormItem>
       <ElFormItem label="结束时间"><ElInput v-model="form.end_time" type="time" step="1800" /></ElFormItem>

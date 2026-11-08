@@ -15,6 +15,9 @@ export class ApiError extends Error {
 const labels: Record<string, string> = {
   username: '登录名', full_name: '姓名', identity_type: '师生身份',
   password: '密码', confirm_password: '确认密码',
+  room_id: '会议室编号', title: '会议主题', purpose: '用途', attendees: '预计人数',
+  date: '使用日期', start_time: '开始时间', end_time: '结束时间',
+  required_equipment: '所需设备', reason: '取消原因',
 }
 
 function normalizeError(error: unknown): ApiError {
@@ -26,11 +29,13 @@ function normalizeError(error: unknown): ApiError {
   if (!error.response) return new ApiError(null, '无法连接服务，请检查连接后重试。')
 
   const status = error.response.status
+  const isReservation = /^\/?reservations(?:\/|$)/.test(error.config?.url ?? '')
   const detail: unknown = error.response.data?.detail
   const fieldErrors: Record<string, string> = {}
   if (status === 422 && Array.isArray(detail)) {
     for (const item of detail) {
-      const field = Array.isArray(item?.loc) ? item.loc.at(-1) : undefined
+      // 设备数组错误的最后一项可能是下标，字段名在body/query之后。
+      const field = Array.isArray(item?.loc) ? item.loc[1] : undefined
       if (typeof field !== 'string' || !labels[field]) continue
       const label = labels[field]
       let message = `${label}填写不符合要求。`
@@ -44,10 +49,13 @@ function normalizeError(error: unknown): ApiError {
     }
     const mismatch = detail.some(item => item?.msg === 'Value error, 两次输入的密码不一致')
     if (mismatch) fieldErrors.confirm_password = '两次输入的密码不一致。'
-    return new ApiError(422, mismatch ? '两次输入的密码不一致。' : '请检查表单中的填写内容。', fieldErrors)
+    const message = isReservation && Object.keys(fieldErrors).length
+      ? Object.values(fieldErrors).join(' ')
+      : mismatch ? '两次输入的密码不一致。' : '请检查表单中的填写内容。'
+    return new ApiError(422, message, fieldErrors)
   }
   const fallback = status === 401 ? '登录已失效，请重新登录。'
-    : status === 409 ? '登录名已存在，请更换登录名。'
+    : status === 409 ? (isReservation ? '预约状态或时段发生冲突，请刷新记录后核对。' : '登录名已存在，请更换登录名。')
       : status >= 500 ? '服务暂不可用，请稍后重试。' : '操作未完成，请重试。'
   // 只保留服务器明确返回的简短提示，不传播可能带密码的Axios请求配置。
   return new ApiError(status, typeof detail === 'string' ? detail : fallback)
