@@ -114,6 +114,27 @@ test('提交遇到冲突时清除上一轮无占位提示并保留表单', async
   assert.match(state.message.value, /所选时段已有预约/)
 })
 
+test('提交网络失败保留完整草稿并提示先核对实际预约记录，不自动重试', async () => {
+  const { state } = dialog()
+  state.form.required_equipment = ['白板']
+  const draft = structuredClone(vue.toRaw(state.form))
+  let submissions = 0
+  api.http.defaults.adapter = async config => {
+    assert.equal(config.method, 'post')
+    assert.equal(config.url, '/reservations')
+    submissions++
+    throw new api.ApiError(null, '无法连接服务')
+  }
+  await state.submit()
+  await vue.nextTick()
+  assert.deepEqual(vue.toRaw(state.form), draft)
+  assert.equal(state.busy.value, false)
+  assert.equal(state.success.value, false)
+  assert.match(state.message.value, /无法连接服务/)
+  assert.match(state.message.value, /请先核对实际预约记录，勿直接重复提交/)
+  assert.equal(submissions, 1)
+})
+
 test('离开弹窗后旧查询的401不得再触发会话恢复', async () => {
   const { state, app } = dialog()
   let rejectRequest!: (reason: unknown) => void

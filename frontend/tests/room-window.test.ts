@@ -11,11 +11,11 @@ import { buildRoomWindowQuery, roomTimeOptions } from '../src/composables/roomWi
 import { useRoomBrowser } from '../src/composables/useRoomBrowser.ts'
 import { useAuthStore } from '../src/stores/auth.ts'
 import type { CurrentUser } from '../src/types/auth.ts'
-import type { RoomInfo, RoomWindowCheck, RoomWindowQuery } from '../src/types/rooms.ts'
+import type { RoomInfo, RoomOccupancy, RoomWindowCheck, RoomWindowQuery } from '../src/types/rooms.ts'
 
 const query: RoomWindowQuery = { date: '2030-03-02', start_time: '10:00', end_time: '11:00' }
 const emptyTime = { date: '', start_time: '', end_time: '' }
-const original = { list: roomsApi.list, queryWindow: roomsApi.queryWindow, detail: roomsApi.detail, me: authApi.me, adapter: http.defaults.adapter }
+const original = { list: roomsApi.list, occupancy: roomsApi.occupancy, queryWindow: roomsApi.queryWindow, detail: roomsApi.detail, me: authApi.me, adapter: http.defaults.adapter }
 let scopes: EffectScope[] = []
 
 function rules(selected: RoomWindowQuery | null = null, serverNow = '2030-03-01T09:00:00+08:00'): RoomWindowCheck {
@@ -29,6 +29,10 @@ function rules(selected: RoomWindowQuery | null = null, serverNow = '2030-03-01T
 
 function room(id = 1): RoomInfo {
   return { id, name: `合成会议室${id}`, location: '测试楼', capacity: 20, equipment: ['白板'], is_active: true }
+}
+
+function occupancy(id = 1): RoomOccupancy {
+  return { room_id: id, available: true, is_active: true, occupancy: [], server_now: '2030-03-01T09:00:00+08:00', reserves_room: false }
 }
 
 function user(id: number): CurrentUser {
@@ -60,6 +64,7 @@ beforeEach(() => {
   setActivePinia(createPinia())
   scopes = []
   roomsApi.list = async () => [room()]
+  roomsApi.occupancy = async () => [occupancy(1), occupancy(2)]
   roomsApi.queryWindow = async () => { throw new Error('测试未设置时间API mock，禁止网络') }
   roomsApi.detail = async () => { throw new Error('时间测试不应请求详情') }
   authApi.me = async () => { throw new Error('测试未设置身份API mock，禁止网络') }
@@ -69,6 +74,7 @@ beforeEach(() => {
 afterEach(() => {
   scopes.forEach(scope => scope.stop())
   roomsApi.list = original.list
+  roomsApi.occupancy = original.occupancy
   roomsApi.queryWindow = original.queryWindow
   roomsApi.detail = original.detail
   authApi.me = original.me
@@ -111,6 +117,7 @@ test('读取或刷新规则不把元数据当作校验成功，也不自动增�
   let checks = 0
   roomsApi.list = async () => { lists += 1; return [] }
   roomsApi.queryWindow = async selected => { assert.equal(selected, undefined); checks += 1; return rules(null, `2030-03-01T0${checks}:00:00+08:00`) }
+  roomsApi.occupancy = async () => { assert.fail('未填时间不得请求占用') }
   const { state } = createBrowser()
   await flush()
   await state.loadWindowRules()
@@ -134,13 +141,14 @@ test('规则读取失败保留错误供重试，不阻断不填时间的资料�
   assert.equal(state.appliedWindow.value, null)
 })
 
-test('完整时间先校验再读资料，只展示成功列表对应的时间快照', async () => {
+test('完整时间先校验再读资料和一次全量占用，只展示成功列表对应的时间快照', async () => {
   const { state } = createBrowser()
   await flush()
   const calls: string[] = []
   const listed = deferred<RoomInfo[]>()
   roomsApi.queryWindow = async selected => { calls.push('validate'); assert.deepEqual(selected, query); return rules(selected!) }
   roomsApi.list = filters => { calls.push('list'); assert.deepEqual(filters, { attendees: 12 }); return listed.promise }
+  roomsApi.occupancy = async selected => { calls.push('occupancy'); assert.deepEqual(selected, query); return [occupancy(2)] }
   Object.assign(state.draft, query, { attendees: '12' })
   const pending = state.search()
   await flush()
@@ -150,9 +158,11 @@ test('完整时间先校验再读资料，只展示成功列表对应的时间�
   state.draft.date = '2030-03-03'
   listed.resolve([room(2)])
   await pending
+  assert.deepEqual(calls, ['validate', 'list', 'occupancy'])
   assert.equal(state.appliedWindow.value?.date, query.date)
   assert.equal(state.windowRules.value?.availability_checked, false)
   assert.equal(state.hasLoaded.value, true)
+  assert.equal(state.occupancyByRoom.value[2]?.available, true)
 })
 
 test('部分时间本地拒绝，服务器拒绝过期开始时间也不继续读资料且保留表单', async () => {
@@ -363,4 +373,107 @@ test('时间通过但资料读取失败时，不把部分结果展示为已完�
   assert.equal(state.appliedWindow.value, null)
   assert.equal(state.draft.date, query.date)
   assert.equal(state.errorMessage.value, '会议室资料读取失败')
+})
+
+test('占用结果保留冲突和停用房间及同房间多个占位，未填时间不携带旧状态', async () => {
+  const { state } = createBrowser()
+  await flush()
+  roomsApi.queryWindow = async selected => rules(selected!)
+  roomsApi.list = async () => [room(1), room(2), { ...room(3), is_active: false }]
+  const slots = [
+    { status: 'pending' as const, starts_at: '2030-03-02T10:00:00+08:00', ends_at: '2030-03-02T10:30:00+08:00' },
+    { status: 'approved' as const, starts_at: '2030-03-02T10:30:00+08:00', ends_at: '2030-03-02T11:00:00+08:00' },
+  ]
+  let calls = 0
+  roomsApi.occupancy = async () => {
+    calls++
+    return [{ ...occupancy(1), available: false, occupancy: slots }, occupancy(2), { ...occupancy(3), available: false, is_active: false }]
+  }
+  Object.assign(state.draft, query)
+  await state.search()
+  assert.deepEqual(state.rooms.value.map(item => item.id), [1, 2, 3])
+  assert.deepEqual(state.occupancyByRoom.value[1]?.occupancy, slots)
+  assert.equal(state.occupancyByRoom.value[2]?.available, true)
+  assert.equal(state.occupancyByRoom.value[3]?.is_active, false)
+  state.clearWindowDraft()
+  await state.search()
+  assert.equal(calls, 1)
+  assert.deepEqual(state.occupancyByRoom.value, {})
+  assert.equal(state.appliedWindow.value, null)
+})
+
+test('占用请求失败或缺少列表房间时清空上一轮结果，保留时间供重试', async () => {
+  const { state } = createBrowser()
+  await flush()
+  roomsApi.queryWindow = async selected => rules(selected!)
+  Object.assign(state.draft, query)
+  await state.search()
+  assert.equal(state.occupancyByRoom.value[1]?.available, true)
+  roomsApi.occupancy = async () => { throw new ApiError(503, '占用读取失败') }
+  await state.search()
+  assert.equal(state.errorMessage.value, '占用读取失败')
+  assert.equal(state.draft.date, query.date)
+  assert.deepEqual(state.occupancyByRoom.value, {})
+  assert.deepEqual(state.rooms.value, [])
+  assert.equal(state.appliedWindow.value, null)
+  assert.equal(state.hasLoaded.value, false)
+  roomsApi.occupancy = async () => []
+  await state.search()
+  assert.match(state.errorMessage.value, /不完整/)
+  assert.equal(state.hasLoaded.value, false)
+})
+
+test('旧占用成功或失败不能覆盖重置或新查询结果', async () => {
+  const { state } = createBrowser()
+  await flush()
+  roomsApi.queryWindow = async selected => rules(selected!)
+  const old = deferred<RoomOccupancy[]>()
+  roomsApi.occupancy = () => old.promise
+  Object.assign(state.draft, query)
+  const first = state.search()
+  await flush()
+  await state.resetFilters()
+  old.resolve([{ ...occupancy(), available: false }])
+  await first
+  assert.deepEqual(state.occupancyByRoom.value, {})
+  assert.equal(state.appliedWindow.value, null)
+  const staleFailure = deferred<RoomOccupancy[]>()
+  roomsApi.occupancy = selected => selected.date === query.date ? staleFailure.promise : Promise.resolve([occupancy()])
+  Object.assign(state.draft, query)
+  const second = state.search()
+  await flush()
+  state.draft.date = '2030-03-03'
+  await state.search()
+  staleFailure.reject(new ApiError(401, '旧占用失效'))
+  await second
+  assert.equal(state.appliedWindow.value?.date, '2030-03-03')
+  assert.equal(state.occupancyByRoom.value[1]?.available, true)
+  assert.equal(state.errorMessage.value, '')
+})
+
+test('换号或离开页面会丢弃迟到占用响应并清除占用状态', async () => {
+  const { auth, state, scope } = createBrowser()
+  await flush()
+  roomsApi.queryWindow = async selected => rules(selected!)
+  const old = deferred<RoomOccupancy[]>()
+  roomsApi.occupancy = () => old.promise
+  Object.assign(state.draft, query)
+  const first = state.search()
+  await flush()
+  auth.user = user(2)
+  auth.sessionChangeCount++
+  await flush()
+  old.resolve([occupancy()])
+  await first
+  assert.deepEqual(state.occupancyByRoom.value, {})
+  assert.equal(state.appliedWindow.value, null)
+  const late = deferred<RoomOccupancy[]>()
+  roomsApi.occupancy = () => late.promise
+  Object.assign(state.draft, query)
+  const second = state.search()
+  await flush()
+  scope.stop()
+  late.resolve([occupancy()])
+  await second
+  assert.deepEqual(state.occupancyByRoom.value, {})
 })

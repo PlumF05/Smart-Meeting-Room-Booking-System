@@ -4,7 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.errors import DatabaseUnavailableError
-from app.models import User, MeetingRoom, Reservation, LoginSession
+from app.models import User, MeetingRoom, Reservation, LoginSession, OperationLog
 from app.schemas.operations import OperationEntry, MessageDraft
 from app.services.operations import append_operation
 from app.services.booking_time import get_beijing_now, to_utc_naive, utc_naive_to_beijing
@@ -20,13 +20,13 @@ class CancellationConflictError(Exception):
     pass
 
 
-def present(record, room, now):
+def present(record, room, now, reminded=None):
     effective = record.status
     if effective == 'pending' and record.starts_at <= now:
         effective = 'expired'
     elif effective == 'approved' and record.ends_at <= now:
         effective = 'finished'
-    return dict(
+    result = dict(
         id=record.id, room_id=record.room_id, title=record.title, purpose=record.purpose,
         attendees=record.attendees, starts_at=utc_naive_to_beijing(record.starts_at),
         ends_at=utc_naive_to_beijing(record.ends_at), submitted_at=utc_naive_to_beijing(record.submitted_at),
@@ -38,6 +38,9 @@ def present(record, room, now):
         current_room=dict(name=room.name, location=room.location, capacity=room.capacity,
                           equipment=room.equipment, is_active=room.is_active),
     )
+    if reminded is not None:
+        result.update(has_reminded=reminded, can_remind=not reminded and record.status == 'pending' and record.starts_at > now)
+    return result
 
 
 def read_mine(session: Session, user_id: int, reservation_id: int | None = None):
@@ -50,7 +53,10 @@ def read_mine(session: Session, user_id: int, reservation_id: int | None = None)
             if reservation_id is not None and not rows:
                 raise ReservationNotFoundError()
             now = to_utc_naive(get_beijing_now())
-            result = [present(record, room, now) for record, room in rows]
+            reminded = set(session.scalars(select(OperationLog.object_id).where(
+                OperationLog.object_type == 'reservation', OperationLog.action == 'remind',
+                OperationLog.object_id.in_([record.id for record, room in rows]))))
+            result = [present(record, room, now, record.id in reminded) for record, room in rows]
             return result[0] if reservation_id is not None else result
     except SQLAlchemyError:
         raise DatabaseUnavailableError() from None

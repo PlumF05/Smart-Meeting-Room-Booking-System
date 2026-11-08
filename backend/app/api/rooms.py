@@ -81,6 +81,15 @@ def room_occupancy(
         raise HTTPException(status_code=422, detail=str(error)) from None
 
 
+@router.get("/occupancy", summary="一次查询全部会议室的公开时段占位")
+def all_occupancy(criteria: Annotated[RoomWindowQuery, Query()], session: Annotated[Session, Depends(get_db)]):
+    from app.services.room_occupancy import read_all_occupancy
+    try:
+        return read_all_occupancy(session, criteria)
+    except BookingTimeError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from None
+
+
 @router.get(
     "/{room_id}", response_model=RoomInfo, summary="查看指定会议室基础资料",
     responses={404: {"description": "会议室不存在"}},

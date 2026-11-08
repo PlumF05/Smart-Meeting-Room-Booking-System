@@ -99,7 +99,10 @@ onBeforeUnmount(() => { requestVersion += 1 })
         </dl>
         <div class="workspace-availability">
           <RouterLink class="profile-link" :to="{ name: 'rooms' }">查询会议室</RouterLink>
-          <p>{{ role === 'admin' ? '审批与资源维护功能尚未开放。' : '可以查询会议室、提交预约，并在“我的预约”查看或取消申请。' }}</p>
+          <RouterLink v-if="role === 'admin'" class="profile-link management-link" :to="{ name: 'management' }">办理审批与资源维护</RouterLink>
+          <RouterLink v-if="role === 'admin'" class="profile-link management-link" :to="{ name: 'admin-tools' }">账号、统计与操作记录</RouterLink>
+          <RouterLink class="profile-link management-link" :to="{ name: 'messages' }">站内消息</RouterLink>
+          <p>{{ role === 'admin' ? '可以办理预约与资源管理，在管理工具中启停普通账号、查看预约数量和操作记录，并通过站内消息接收通知。' : '可以查询会议室、提交预约，在“我的预约”查看或取消申请，并通过站内消息接收通知。' }}</p>
         </div>
       </template>
     </section>
@@ -109,6 +112,7 @@ onBeforeUnmount(() => { requestVersion += 1 })
 <style scoped>
 .profile-link { flex-shrink: 0; font-size: 14px; font-weight: 600; text-decoration: none; }
 .profile-link:hover { text-decoration: underline; }
+.management-link { margin-left: 24px; }
 .workspace-context { padding: 30px 32px; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
 .workspace-status { margin: 8px 0; color: var(--muted); font-size: 15px; }
 .workspace-context-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; }

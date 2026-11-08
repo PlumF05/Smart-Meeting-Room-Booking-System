@@ -125,6 +125,23 @@ test('日期时段单独发给时间校验接口，不加入资料查询或传�
   assert.equal((await roomsApi.queryWindow(query)).availability_checked, false)
 })
 
+test('列表占用仅用一次带完整时段的bulk GET，不夹带人数设备或写请求', async () => {
+  const query = { date: '2030-03-02', start_time: '10:00', end_time: '11:30' }
+  const result = [{ room_id: 6, available: false, is_active: false, occupancy: [], server_now: '2030-03-01T10:00:00+08:00', reserves_room: false }]
+  let calls = 0
+  http.defaults.adapter = async config => {
+    calls++
+    assert.equal(config.method, 'get')
+    assert.equal(config.withCredentials, true)
+    const url = new URL(http.getUri(config), 'http://test.invalid')
+    assert.equal(url.pathname, '/api/rooms/occupancy')
+    assert.deepEqual([...url.searchParams], Object.entries(query))
+    return response(config, result)
+  }
+  assert.deepEqual(await roomsApi.occupancy(query), result)
+  assert.equal(calls, 1)
+})
+
 test('服务器拒绝已过开始时间时，保留安全中文说明用于表单修改', async () => {
   http.defaults.adapter = async config => {
     throw new AxiosError('synthetic request metadata', 'ERR_BAD_RESPONSE', config, undefined,

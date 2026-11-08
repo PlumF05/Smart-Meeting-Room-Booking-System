@@ -4,7 +4,7 @@ import { ApiError, getErrorMessage } from '../api/http.ts'
 import { useAuthStore } from '../stores/auth.ts'
 import { buildRoomWindowQuery } from './roomWindow.ts'
 import type { RoomWindowDraft } from './roomWindow.ts'
-import type { RoomFilters, RoomInfo, RoomWindowCheck, RoomWindowQuery, ValidatedRoomWindow } from '../types/rooms.ts'
+import type { RoomFilters, RoomInfo, RoomOccupancy, RoomWindowCheck, RoomWindowQuery, ValidatedRoomWindow } from '../types/rooms.ts'
 
 export interface RoomFilterDraft extends RoomWindowDraft {
   attendees: string
@@ -41,6 +41,7 @@ export function useRoomBrowser() {
   const hasLoaded = ref(false)
   const appliedFilters = ref<RoomFilters>({})
   const appliedWindow = ref<ValidatedRoomWindow | null>(null)
+  const occupancyByRoom = ref<Record<number, RoomOccupancy>>({})
   const windowRules = ref<RoomWindowCheck | null>(null)
   const rulesLoading = ref(false)
   const rulesError = ref('')
@@ -107,6 +108,7 @@ export function useRoomBrowser() {
     rooms.value = []
     hasLoaded.value = false
     appliedWindow.value = null
+    occupancyByRoom.value = {}
     errorMessage.value = ''
     loading.value = false
     if (!owner || disposed) return
@@ -145,8 +147,15 @@ export function useRoomBrowser() {
       }
       const result = await roomsApi.list(filters)
       if (!current()) return
+      const occupancy = windowQuery ? await roomsApi.occupancy(windowQuery) : []
+      if (!current()) return
+      const byRoom = Object.fromEntries(occupancy.map(item => [item.room_id, item]))
+      if (windowQuery && result.some(room => !byRoom[room.id])) {
+        throw new ApiError(null, '会议室占用结果不完整，请重新查询。')
+      }
       rooms.value = result
       appliedWindow.value = validatedWindow
+      occupancyByRoom.value = byRoom
       equipmentOptions.value = [...new Set([...equipmentOptions.value, ...result.flatMap(room => room.equipment)])]
       hasLoaded.value = true
     } catch (error) {
@@ -204,6 +213,7 @@ export function useRoomBrowser() {
     equipmentOptions.value = []
     appliedFilters.value = {}
     appliedWindow.value = null
+    occupancyByRoom.value = {}
     ruleVersion += 1
     windowRules.value = null
     rulesLoading.value = false
@@ -226,7 +236,7 @@ export function useRoomBrowser() {
 
   return {
     draft, rooms, equipmentOptions, loading, errorMessage, hasLoaded, appliedFilters,
-    appliedWindow, windowRules, rulesLoading, rulesError,
+    appliedWindow, occupancyByRoom, windowRules, rulesLoading, rulesError,
     detailOpen, detail, detailId, detailLoading, detailError,
     search, resetFilters, openDetail, closeDetail, clearWindowDraft, loadWindowRules,
   }

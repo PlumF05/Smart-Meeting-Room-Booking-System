@@ -20,6 +20,15 @@ export interface RoomWindowQuery {
   end_time: string
 }
 
+export interface RoomOccupancy {
+  room_id: number
+  available: boolean
+  is_active: boolean
+  occupancy: { status: 'pending' | 'approved'; starts_at: string; ends_at: string }[]
+  server_now: string
+  reserves_room: false
+}
+
 export interface ValidatedRoomWindow extends RoomWindowQuery {
   starts_at: string
   ends_at: string

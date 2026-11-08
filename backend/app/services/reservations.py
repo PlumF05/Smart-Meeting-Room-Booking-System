@@ -73,6 +73,7 @@ def _assert_current_session(
 def _has_overlap(
     session: Session, *, starts_at: datetime, ends_at: datetime, now_utc: datetime,
     user_id: int | None = None, room_id: int | None = None,
+    exclude_id: int | None = None,
 ) -> bool:
     statement = select(Reservation.id).where(
         Reservation.starts_at < ends_at,
@@ -86,6 +87,8 @@ def _has_overlap(
         statement = statement.where(Reservation.user_id == user_id)
     if room_id is not None:
         statement = statement.where(Reservation.room_id == room_id)
+    if exclude_id is not None:
+        statement = statement.where(Reservation.id != exclude_id)
     # 在申请人/房间父行锁内查询：即使原来没有预约行，也能串行检查并插入。
     return session.scalar(statement.limit(1)) is not None
 

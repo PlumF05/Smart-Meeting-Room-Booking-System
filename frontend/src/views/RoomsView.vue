@@ -21,7 +21,7 @@ watch(() => [auth.user?.id, auth.status, auth.sessionChangeCount], () => { selec
 const router = useRouter()
 const {
   draft, rooms, equipmentOptions, loading, errorMessage, hasLoaded, appliedFilters,
-  appliedWindow, windowRules, rulesLoading, rulesError,
+  appliedWindow, occupancyByRoom, windowRules, rulesLoading, rulesError,
   detailOpen, detail, detailId, detailLoading, detailError,
   search, resetFilters, openDetail, closeDetail, clearWindowDraft, loadWindowRules,
 } = useRoomBrowser()
@@ -52,6 +52,31 @@ watch(() => auth.status, status => {
 function updateDetailVisibility(visible: boolean) {
   if (!visible) closeDetail()
 }
+
+function canBookRoom(room: RoomInfo | undefined) {
+  if (!room) return false
+  const occupancy = occupancyByRoom.value[room.id]
+  return room.is_active && (!appliedWindow.value || (occupancy?.is_active === true && occupancy.available))
+}
+
+function openBooking(roomId: number) {
+  const room = rooms.value.find(item => item.id === roomId)
+  if (!room || !canBookRoom(room)) return
+  const emptyDraft = !bookingDraft.title && !bookingDraft.purpose && bookingDraft.attendees === 1
+    && !bookingDraft.date && !bookingDraft.start_time && !bookingDraft.end_time && !bookingDraft.required_equipment.length
+  if (emptyDraft) {
+    Object.assign(bookingDraft, {
+      date: appliedWindow.value?.date ?? '', start_time: appliedWindow.value?.start_time ?? '',
+      end_time: appliedWindow.value?.end_time ?? '', attendees: appliedFilters.value.attendees ?? 1,
+      required_equipment: [...(appliedFilters.value.equipment ?? [])],
+    })
+  }
+  selectedRoom.value = room
+}
+
+const occupancyTime = (value: string) => new Date(value).toLocaleTimeString('zh-CN', {
+  timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+})
 </script>
 
 <template>
@@ -59,7 +84,7 @@ function updateDetailVisibility(visible: boolean) {
     <div class="account-heading rooms-heading">
       <div>
         <h1 id="rooms-title">会议室查询</h1>
-        <p class="account-subtitle">筛选会议室资料，也可填写日期和时段检查时间规则。</p>
+        <p class="account-subtitle">筛选会议室资料，填写日期和时段可查看预约占用。</p>
       </div>
     </div>
 
@@ -119,7 +144,7 @@ function updateDetailVisibility(visible: boolean) {
           <ElButton link type="primary" :disabled="loading" @click="loadWindowRules">刷新时间规则</ElButton>
         </div>
       </template>
-      <p class="room-query-note">本页仅匹配会议室资料和校验时间规则，尚未核验预约占用。启用不代表空闲，查询不会产生预约。</p>
+      <p class="room-query-note">不填时间时仅查询基础资料；填写完整时段后显示占用状态。查询不会占位，提交预约时仍会重新校验。</p>
     </section>
 
     <section class="room-results" aria-labelledby="room-results-title" :aria-busy="loading">
@@ -133,7 +158,7 @@ function updateDetailVisibility(visible: boolean) {
         <ElButton class="feedback-button" @click="search">重新查询</ElButton>
       </div>
       <template v-else-if="hasLoaded">
-        <p v-if="appliedWindow" class="checked-window" role="status">{{ appliedWindow.date }} {{ appliedWindow.start_time }}—{{ appliedWindow.end_time }}（北京时间）：时间规则通过；尚未核验预约占用。</p>
+        <p v-if="appliedWindow" class="checked-window" role="status">{{ appliedWindow.date }} {{ appliedWindow.start_time }}—{{ appliedWindow.end_time }}（北京时间）：时间规则通过，以下为本次查询的占用状态，提交时仍会重新校验。</p>
         <ElEmpty v-if="!rooms.length" description="没有符合条件的会议室，可减少人数或设备要求后重试。">
           <ElButton @click="resetFilters">清除筛选</ElButton>
         </ElEmpty>
@@ -159,8 +184,17 @@ function updateDetailVisibility(visible: boolean) {
           <ElTableColumn label="资源状态" width="102">
             <template #default="{ row }"><span class="resource-state" :class="{ inactive: !row.is_active }">{{ row.is_active ? '启用' : '停用' }}</span></template>
           </ElTableColumn>
+          <ElTableColumn v-if="appliedWindow" label="所选时段" min-width="230">
+            <template #default="{ row }">
+              <span v-if="!occupancyByRoom[row.id]?.is_active" class="room-muted">停用</span>
+              <span v-else-if="occupancyByRoom[row.id]?.available" class="resource-state">可预约</span>
+              <div v-for="(item, index) in occupancyByRoom[row.id]?.occupancy" v-else :key="index" class="occupancy-slot">
+                {{ item.status === 'pending' ? '未审批占位' : '已预约' }}：{{ occupancyTime(item.starts_at) }}—{{ occupancyTime(item.ends_at) }}
+              </div>
+            </template>
+          </ElTableColumn>
           <ElTableColumn label="操作" width="190" align="right">
-            <template #default="{ row }"><ElButton link type="primary" :aria-label="`查看${row.name}详情`" @click="openDetail(row.id)">查看详情</ElButton><ElButton v-if="auth.user?.role === 'user'" link type="primary" :disabled="!row.is_active" @click="selectedRoom = rooms.find(room => room.id === row.id) ?? null">预约</ElButton></template>
+            <template #default="{ row }"><ElButton link type="primary" :aria-label="`查看${row.name}详情`" @click="openDetail(row.id)">查看详情</ElButton><ElButton v-if="auth.user?.role === 'user'" link type="primary" :disabled="!canBookRoom(rooms.find(room => room.id === row.id))" @click="openBooking(row.id)">预约</ElButton></template>
           </ElTableColumn>
         </ElTable>
       </template>
@@ -224,6 +258,7 @@ function updateDetailVisibility(visible: boolean) {
 .resource-state { display: inline-flex; align-items: center; gap: 7px; color: var(--teal); font-size: 14px; white-space: nowrap; }
 .resource-state::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .resource-state.inactive, .room-muted { color: var(--muted); }
+.occupancy-slot { color: #8c5931; font-size: 13px; line-height: 1.8; }
 .detail-loading { padding: 25px 0; color: var(--muted); }
 .room-detail-heading { display: flex; justify-content: space-between; gap: 24px; align-items: center; }
 .room-detail-heading h2 { margin: 4px 0; color: var(--navy); font-size: 23px; overflow-wrap: anywhere; }

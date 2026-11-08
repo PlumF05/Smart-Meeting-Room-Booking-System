@@ -8,6 +8,8 @@ from app.core.local_accounts import record_test_account
 from app.core.security import hash_password
 from app.models.user import User
 from app.schemas.auth import RegisteredUser, RegistrationRequest
+from app.schemas.operations import OperationEntry
+from app.services.operations import append_operation
 
 
 class UsernameAlreadyExistsError(Exception):
@@ -17,6 +19,7 @@ class UsernameAlreadyExistsError(Exception):
 def register_user(session: Session, data: RegistrationRequest) -> RegisteredUser:
     # Argon2计算放在事务外，避免哈希期间持有数据库连接或锁。
     password_hash = hash_password(data.password.get_secret_value())
+    user_flushed = False
     try:
         with session.begin():
             user = User(
@@ -31,7 +34,13 @@ def register_user(session: Session, data: RegistrationRequest) -> RegisteredUser
             session.add(user)
             # 不先查重再依赖查询结果写入；数据库唯一约束是并发时的最终保障。
             session.flush()
+            user_flushed = True
             session.refresh(user)
+            # 注册和审计共同提交；不把密码、确认密码或哈希放入操作记录。
+            append_operation(session, OperationEntry(
+                event_key=f"user:{user.id}:register", actor_kind="user", actor_user_id=user.id,
+                object_type="user", object_id=user.id, action="register", source="page", after_status="active",
+            ))
             result = RegisteredUser(
                 id=user.id,
                 username=user.username,
@@ -48,7 +57,7 @@ def register_user(session: Session, data: RegistrationRequest) -> RegisteredUser
         return result
     except IntegrityError as error:
         # users的唯一业务键目前只有username，1062表示与已有登录名冲突。
-        if getattr(error.orig, "args", ()) and error.orig.args[0] == 1062:
+        if not user_flushed and getattr(error.orig, "args", ())[:1] == (1062,):
             raise UsernameAlreadyExistsError() from None
         raise DatabaseUnavailableError() from None
     except SQLAlchemyError:
