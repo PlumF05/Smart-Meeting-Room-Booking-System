@@ -4,6 +4,8 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 
 from app.api.auth import router as auth_router
+from app.api.assistant import router as assistant_router
+from app.api.meeting_assistant import router as meeting_assistant_router
 from app.api.errors import (
     database_unavailable_error_handler,
     invalid_credentials_error_handler,
@@ -38,13 +40,15 @@ app.add_exception_handler(ManagementError, management_error_handler)
 @app.middleware("http")
 async def prevent_private_response_caching(request: Request, call_next):
     response = await call_next(request)
-    if request.url.path.startswith(("/api/auth/", "/api/workspaces/", "/api/rooms", "/api/reservations", "/api/admin/", "/api/messages")):
+    if request.url.path.startswith(("/api/auth/", "/api/workspaces/", "/api/rooms", "/api/reservations", "/api/admin/", "/api/messages", "/api/assistant")):
         response.headers["Cache-Control"] = "no-store"
     return response
 
 
 app.include_router(health_router)
 app.include_router(auth_router)
+app.include_router(assistant_router)
+app.include_router(meeting_assistant_router)
 app.include_router(workspace_router)
 app.include_router(rooms_router)
 app.include_router(reservations_router)

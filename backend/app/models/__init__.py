@@ -6,5 +6,6 @@ from app.models.notification import Notification
 from app.models.operation_log import OperationLog
 from app.models.reservation import Reservation
 from app.models.user import User
+from app.models.assistant_confirmation import AssistantConfirmation
 
-__all__ = ["User", "MeetingRoom", "LoginSession", "Reservation", "OperationLog", "Notification"]
+__all__ = ["User", "MeetingRoom", "LoginSession", "Reservation", "OperationLog", "Notification", "AssistantConfirmation"]

@@ -99,7 +99,7 @@ def counts(engine):
                      for model in (Reservation, OperationLog, Notification))
 
 
-def test_0004_round_trip_preserves_existing_users_rooms_sessions_and_reservations(engine):
+def test_0004_and_0005_round_trip_preserves_existing_users_rooms_sessions_and_reservations(engine):
     # 本模块的临时实例独占，回退不会触及开发数据库。
     with engine.connect() as connection:
         command.downgrade(migration_config(connection), "0003")
@@ -117,16 +117,20 @@ def test_0004_round_trip_preserves_existing_users_rooms_sessions_and_reservation
     before = old_data(engine)
     with engine.connect() as connection:
         config = migration_config(connection)
-        command.upgrade(config, "head")
+        command.upgrade(config, "0004")
         assert MigrationContext.configure(connection).get_current_revision() == "0004"
         assert {"operation_logs", "notifications"} <= set(inspect(connection).get_table_names())
+        connection.rollback()
+        command.upgrade(config, "head")
+        assert MigrationContext.configure(connection).get_current_revision() == "0005"
+        assert "assistant_confirmations" in inspect(connection).get_table_names()
         connection.rollback()
         command.check(config)
     assert old_data(engine) == before
     with engine.connect() as connection:
         config = migration_config(connection)
         command.downgrade(config, "0003")
-        assert not {"operation_logs", "notifications"} & set(inspect(connection).get_table_names())
+        assert not {"operation_logs", "notifications", "assistant_confirmations"} & set(inspect(connection).get_table_names())
         connection.rollback()
         command.upgrade(config, "head")
         command.upgrade(config, "head")

@@ -37,7 +37,7 @@ def migration_config(connection):
 def test_migrations_round_trip_and_metadata_match(engine):
     with engine.connect() as connection:
         config = migration_config(connection)
-        assert MigrationContext.configure(connection).get_current_revision() == "0004"
+        assert MigrationContext.configure(connection).get_current_revision() == "0005"
         connection.rollback()
         command.current(config, check_heads=True)
         connection.rollback()
@@ -50,9 +50,9 @@ def test_migrations_round_trip_and_metadata_match(engine):
         command.upgrade(config, "head")
         assert set(inspect(connection).get_table_names()) == {
             "alembic_version", "users", "meeting_rooms", "login_sessions", "reservations",
-            "operation_logs", "notifications",
+            "operation_logs", "notifications", "assistant_confirmations",
         }
-        assert MigrationContext.configure(connection).get_current_revision() == "0004"
+        assert MigrationContext.configure(connection).get_current_revision() == "0005"
         connection.rollback()
         command.check(config)
 
@@ -63,9 +63,10 @@ def test_schema_storage_and_project_isolation_level(engine):
         rows = connection.execute(text(
             "SELECT TABLE_NAME, ENGINE, TABLE_COLLATION FROM information_schema.TABLES "
             "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN "
-            "('users','meeting_rooms','login_sessions','reservations','operation_logs','notifications')"
+            "('users','meeting_rooms','login_sessions','reservations','operation_logs','notifications',"
+            "'assistant_confirmations')"
         )).all()
-        assert len(rows) == 6
+        assert len(rows) == 7
         assert all(row.ENGINE == "InnoDB" and row.TABLE_COLLATION == "utf8mb4_0900_ai_ci" for row in rows)
 
 

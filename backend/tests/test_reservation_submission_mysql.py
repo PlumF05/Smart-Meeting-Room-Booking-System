@@ -16,7 +16,7 @@ from app.api import reservations as reservation_api
 from app.core.security import hash_password
 from app.db.session import get_db
 from app.main import app
-from app.models import LoginSession, MeetingRoom, Notification, OperationLog, Reservation, User
+from app.models import AssistantConfirmation, LoginSession, MeetingRoom, Notification, OperationLog, Reservation, User
 from app.schemas.reservations import ReservationCreate
 from app.services import login as login_service, reservations as service
 from app.services.booking_time import BEIJING, BookingTimeError, to_utc_naive
@@ -44,7 +44,7 @@ def encoded_password():
 def world(engine, encoded_password, monkeypatch):
     # engine由conftest创建且在本模块独占；删除仅针对这一个随机端口上的临时库。
     with Session(engine) as database, database.begin():
-        for model in (Notification, OperationLog, Reservation, LoginSession, MeetingRoom, User):
+        for model in (AssistantConfirmation, Notification, OperationLog, Reservation, LoginSession, MeetingRoom, User):
             database.execute(delete(model))
     monkeypatch.setattr(service, "get_beijing_now", lambda: NOW)
     monkeypatch.setattr(login_service, "utc_now", lambda: NOW_UTC)

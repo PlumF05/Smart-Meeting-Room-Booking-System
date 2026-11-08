@@ -15,12 +15,14 @@ htmlcov/
 .env
 .env.*
 !.env.example
+!/backend/.env.ai.example
 # 本机明文测试账号清单及其锁文件、临时文件
 /backend/.local/
 
 # 项目生成产物、本地索引和日志
 /output/
 /backend/data/chroma/
+/backend/data/models/
 *.log
 
 # 系统和编辑器文件

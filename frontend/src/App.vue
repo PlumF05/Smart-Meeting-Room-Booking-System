@@ -4,6 +4,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { ElAlert, ElButton } from 'element-plus'
 import BrandMark from './components/BrandMark.vue'
 import TextSizeSwitch from './components/TextSizeSwitch.vue'
+import AssistantPanel from './components/AssistantPanel.vue'
 import { getErrorMessage } from './api/http'
 import { useAuthStore } from './stores/auth'
 import { homeRouteFor } from './router/permissions.ts'
@@ -66,6 +67,7 @@ async function retrySession() {
           <RouterLink :to="{ name: 'login' }">登录</RouterLink>
           <RouterLink :to="{ name: 'register' }">注册</RouterLink>
         </nav>
+        <AssistantPanel />
         <TextSizeSwitch />
       </div>
     </header>

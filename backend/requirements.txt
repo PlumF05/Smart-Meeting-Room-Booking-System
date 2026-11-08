@@ -1,4 +1,4 @@
-# Python 3.12; Conda environment: meeting-room. AI dependencies are installed in a later stage.
+# Python 3.12; Conda environment: meeting-room. Optional AI dependencies: requirements-ai.txt.
 fastapi==0.162.0
 uvicorn==0.54.0
 pydantic==2.14.2
