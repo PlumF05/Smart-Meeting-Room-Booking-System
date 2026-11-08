@@ -287,12 +287,12 @@ onBeforeUnmount(() => { generation += 1 })
 .management-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding: 20px; background: #fff; border: 1px solid var(--border); border-radius: 8px; }
 .management-filters :deep(.el-form-item) { margin: 0; }
 .status-filter { width: 110px; }.room-filter { width: 165px; }.sort-filter { width: 145px; }.direction-filter { width: 120px; }
-.section-note { margin: 14px 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+.section-note { margin: 14px 0; color: var(--muted); font-size: 0.8125rem; line-height: 1.8; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 14px; }
 .management-table { --el-table-header-bg-color: #eaf1f3; --el-table-header-text-color: #536a76; --el-table-border-color: #d8e2e6; border: 1px solid var(--border); border-radius: 8px; }
 .management-table :deep(td.el-table__cell) { padding-block: 15px; }.management-table :deep(.cell) { overflow-wrap: anywhere; }
-.table-secondary { display: block; color: var(--muted); font-size: 12px; line-height: 1.7; margin-top: 5px; }
-.detail-title { margin: 4px 0 22px; overflow-wrap: anywhere; }.detail-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 0 0 24px; }.detail-fields dt { color: var(--muted); font-size: 13px; margin-bottom: 7px; }.detail-fields dd { margin: 0; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }.detail-wide { grid-column: 1 / -1; }
-.room-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-top: 10px; border-top: 1px solid var(--border); }.room-comparison h3 { font-size: 15px; }.room-comparison p { line-height: 1.8; overflow-wrap: anywhere; font-size: 14px; }
+.table-secondary { display: block; color: var(--muted); font-size: 0.75rem; line-height: 1.7; margin-top: 5px; }
+.detail-title { margin: 4px 0 22px; overflow-wrap: anywhere; }.detail-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 0 0 24px; }.detail-fields dt { color: var(--muted); font-size: 0.8125rem; margin-bottom: 7px; }.detail-fields dd { margin: 0; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }.detail-wide { grid-column: 1 / -1; }
+.room-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-top: 10px; border-top: 1px solid var(--border); }.room-comparison h3 { font-size: 0.9375rem; }.room-comparison p { line-height: 1.8; overflow-wrap: anywhere; font-size: 0.875rem; }
 .room-edit-grid { display: grid; grid-template-columns: 1fr 150px; gap: 20px; }.room-edit-grid + .el-form-item { margin-top: 0; }
 </style>

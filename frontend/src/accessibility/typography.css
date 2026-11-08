@@ -1,0 +1,38 @@
+/* 字号偏好只改变文字尺度；作用于html以覆盖传送到body的弹窗和下拉层。 */
+html[data-text-size="standard"] { font-size: 100%; }
+html[data-text-size="large"] { font-size: 125%; --smrbs-text-scale: 1.25; }
+
+:root {
+  --el-font-size-extra-large: 1.25rem;
+  --el-font-size-large: 1.125rem;
+  --el-font-size-medium: 1rem;
+  --el-font-size-base: .9375rem;
+  --el-font-size-small: .8125rem;
+  --el-font-size-extra-small: .75rem;
+}
+
+/* 这些组件自身声明固定字号，须在组件层覆盖，而非只设置根变量。 */
+.el-dialog { --el-dialog-content-font-size: .875rem; }
+.el-tag { --el-tag-font-size: .75rem; }
+.el-select { --el-select-input-font-size: .875rem; }
+.el-select__wrapper, .el-select--large .el-select__wrapper { font-size: .875rem; }
+.el-select--small .el-select__wrapper, .el-button--small, .el-input--small { font-size: .75rem; }
+.el-input--large { font-size: .875rem; }
+.el-form-item { --font-size: .875rem; }
+.el-form-item--small { --font-size: .75rem; }
+.el-form-item__error { font-size: .75rem; }
+html[data-text-size] .el-input .el-input__count,
+html[data-text-size] .el-textarea .el-input__count { font-size: .75rem; }
+.el-alert {
+  --el-alert-title-font-size: .875rem;
+  --el-alert-title-with-description-font-size: 1rem;
+  --el-alert-description-font-size: .875rem;
+}
+
+/* 仅在大号模式放宽文字容器，避免旧固定行高截掉多行文字。 */
+html[data-text-size="large"] .el-table .cell { line-height: 1.6; }
+html[data-text-size="large"] .el-button { height: auto; min-height: 36px; line-height: 1.5; white-space: normal; }
+html[data-text-size="large"] .el-form-item__label { height: auto; line-height: 1.5; }
+html[data-text-size="large"] .el-form-item__error { position: static; line-height: 1.5; }
+html[data-text-size="large"] .el-tag { height: auto; min-height: 24px; line-height: 1.5; white-space: normal; }
+html[data-text-size="large"] .el-alert__title { line-height: 1.6; }

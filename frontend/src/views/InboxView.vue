@@ -111,6 +111,6 @@ onBeforeUnmount(() => { generation += 1 })
 .inbox-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .inbox-error { margin-bottom: 20px; }
 .inbox-pagination { margin-top: 22px; justify-content: flex-end; }
-.message-time { color: var(--muted); font-size: 13px; }
+.message-time { color: var(--muted); font-size: 0.8125rem; }
 .message-content { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.9; }
 </style>

@@ -228,22 +228,22 @@ const occupancyTime = (value: string) => new Date(value).toLocaleTimeString('zh-
 .filter-grid { display: grid; grid-template-columns: 150px minmax(240px, 1fr) 145px auto; gap: 18px; align-items: start; }
 .time-filter-grid { display: grid; grid-template-columns: 230px 190px 190px 1fr; gap: 18px; align-items: start; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--border); }
 .room-filters :deep(.el-form-item) { margin-bottom: 0; }
-.room-filters :deep(.el-form-item__label) { font-size: 14px; color: var(--navy); }
+.room-filters :deep(.el-form-item__label) { font-size: 0.875rem; color: var(--navy); }
 .room-filters :deep(.el-select) { width: 100%; }
 .filter-actions { display: flex; align-items: center; padding-top: 30px; }
 .clear-time-action { padding-top: 30px; text-align: right; }
-.room-query-note { margin: 18px 0 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
-.server-time-note { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.room-query-note { margin: 18px 0 0; color: var(--muted); font-size: 0.8125rem; line-height: 1.8; }
+.server-time-note { margin: 5px 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.8; }
 .time-rule-refresh { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.time-rule-refresh :deep(.el-button) { flex-shrink: 0; font-size: 13px; }
-.time-rules-error { margin-top: 18px; color: #8c5931; font-size: 13px; }
+.time-rule-refresh :deep(.el-button) { flex-shrink: 0; font-size: 0.8125rem; }
+.time-rules-error { margin-top: 18px; color: #8c5931; font-size: 0.8125rem; }
 .time-rules-error p { margin: 0 0 5px; }
-.checked-window { margin: 0; padding: 14px 26px; background: #f1f7f6; border-bottom: 1px solid var(--border); color: var(--navy); font-size: 13px; line-height: 1.8; }
+.checked-window { margin: 0; padding: 14px 26px; background: #f1f7f6; border-bottom: 1px solid var(--border); color: var(--navy); font-size: 0.8125rem; line-height: 1.8; }
 .room-results { margin-top: 28px; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
 .results-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 26px; border-bottom: 1px solid var(--border); }
-.results-heading h2 { flex-shrink: 0; margin: 0; font-size: 18px; }
-.results-heading h2 span { margin-left: 14px; color: var(--muted); font-size: 14px; font-weight: 400; }
-.results-heading p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.results-heading h2 { flex-shrink: 0; margin: 0; font-size: 1.125rem; }
+.results-heading h2 span { margin-left: 14px; color: var(--muted); font-size: 0.875rem; font-weight: 400; }
+.results-heading p { margin: 0; color: var(--muted); font-size: 0.8125rem; line-height: 1.7; overflow-wrap: anywhere; }
 .rooms-feedback { padding: 32px 26px; color: var(--muted); }
 .feedback-button { margin-top: 18px; }
 .rooms-table { --el-table-header-bg-color: #f6f9fa; --el-table-header-text-color: #536a76; --el-table-border-color: #e3eaed; }
@@ -251,20 +251,20 @@ const occupancyTime = (value: string) => new Date(value).toLocaleTimeString('zh-
 .rooms-table :deep(td.el-table__cell) { padding-block: 17px; }
 .rooms-table :deep(.cell) { padding-inline: 18px; overflow-wrap: anywhere; }
 .room-name { display: block; color: var(--navy); font-weight: 600; }
-.room-id { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+.room-id { display: block; margin-top: 5px; color: var(--muted); font-size: 0.75rem; }
 .room-capacity { font-variant-numeric: tabular-nums; font-weight: 600; }
 .equipment-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .equipment-tags :deep(.el-tag) { height: auto; white-space: normal; overflow-wrap: anywhere; line-height: 1.6; padding-block: 2px; }
-.resource-state { display: inline-flex; align-items: center; gap: 7px; color: var(--teal); font-size: 14px; white-space: nowrap; }
+.resource-state { display: inline-flex; align-items: center; gap: 7px; color: var(--teal); font-size: 0.875rem; white-space: nowrap; }
 .resource-state::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .resource-state.inactive, .room-muted { color: var(--muted); }
-.occupancy-slot { color: #8c5931; font-size: 13px; line-height: 1.8; }
+.occupancy-slot { color: #8c5931; font-size: 0.8125rem; line-height: 1.8; }
 .detail-loading { padding: 25px 0; color: var(--muted); }
 .room-detail-heading { display: flex; justify-content: space-between; gap: 24px; align-items: center; }
-.room-detail-heading h2 { margin: 4px 0; color: var(--navy); font-size: 23px; overflow-wrap: anywhere; }
+.room-detail-heading h2 { margin: 4px 0; color: var(--navy); font-size: 1.4375rem; overflow-wrap: anywhere; }
 .room-detail-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 28px 0; }
-.room-detail-fields dt { margin-bottom: 8px; color: var(--muted); font-size: 13px; }
-.room-detail-fields dd { margin: 0; color: var(--navy); font-size: 15px; line-height: 1.8; overflow-wrap: anywhere; }
+.room-detail-fields dt { margin-bottom: 8px; color: var(--muted); font-size: 0.8125rem; }
+.room-detail-fields dd { margin: 0; color: var(--navy); font-size: 0.9375rem; line-height: 1.8; overflow-wrap: anywhere; }
 .detail-wide { grid-column: 1 / -1; }
-.detail-note { margin: 0; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; line-height: 1.8; }
+.detail-note { margin: 0; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8125rem; line-height: 1.8; }
 </style>

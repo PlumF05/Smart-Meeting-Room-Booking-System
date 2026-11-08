@@ -60,6 +60,6 @@ const expiresLabel = computed(() => {
 </template>
 
 <style scoped>
-.workspace-link { display: inline-block; margin-top: 14px; font-size: 14px; font-weight: 600; text-decoration: none; }
+.workspace-link { display: inline-block; margin-top: 14px; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
 .workspace-link:hover { text-decoration: underline; }
 </style>

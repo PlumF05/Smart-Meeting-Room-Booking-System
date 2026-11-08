@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { ElAlert, ElButton } from 'element-plus'
 import BrandMark from './components/BrandMark.vue'
+import TextSizeSwitch from './components/TextSizeSwitch.vue'
 import { getErrorMessage } from './api/http'
 import { useAuthStore } from './stores/auth'
 import { homeRouteFor } from './router/permissions.ts'
@@ -65,6 +66,7 @@ async function retrySession() {
           <RouterLink :to="{ name: 'login' }">登录</RouterLink>
           <RouterLink :to="{ name: 'register' }">注册</RouterLink>
         </nav>
+        <TextSizeSwitch />
       </div>
     </header>
 
@@ -111,10 +113,10 @@ async function retrySession() {
 </template>
 
 <style scoped>
-.workspace-nav { display: flex; align-items: center; gap: 16px; }
-.header-inner { width: min(1400px, calc(100% - 64px)); }
-.header-account { gap: 14px; }
+.workspace-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.header-inner { width: min(1400px, calc(100% - 64px)); flex-wrap: wrap; padding-block: 16px; row-gap: 12px; }
+.header-account { gap: 14px; flex-wrap: wrap; }
 .header-user { max-width: 100px; }
-.workspace-nav a { padding: 9px 0; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; text-decoration: none; white-space: nowrap; }
+.workspace-nav a { padding: 9px 0; border-bottom: 2px solid transparent; color: var(--muted); font-size: 0.875rem; text-decoration: none; white-space: nowrap; }
 .workspace-nav a.router-link-active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 600; }
 </style>

@@ -110,17 +110,17 @@ onBeforeUnmount(() => { requestVersion += 1 })
 </template>
 
 <style scoped>
-.profile-link { flex-shrink: 0; font-size: 14px; font-weight: 600; text-decoration: none; }
+.profile-link { flex-shrink: 0; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
 .profile-link:hover { text-decoration: underline; }
 .management-link { margin-left: 24px; }
 .workspace-context { padding: 30px 32px; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
-.workspace-status { margin: 8px 0; color: var(--muted); font-size: 15px; }
+.workspace-status { margin: 8px 0; color: var(--muted); font-size: 0.9375rem; }
 .workspace-context-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
-.workspace-context-heading h2 { margin: 0; font-size: 21px; line-height: 1.5; overflow-wrap: anywhere; }
-.workspace-context-heading span { color: var(--teal); font-size: 14px; white-space: nowrap; }
+.workspace-context-heading h2 { margin: 0; font-size: 1.3125rem; line-height: 1.5; overflow-wrap: anywhere; }
+.workspace-context-heading span { color: var(--teal); font-size: 0.875rem; white-space: nowrap; }
 .workspace-identity { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 30px 0; }
-.workspace-identity dt { margin-bottom: 10px; color: var(--muted); font-size: 13px; }
-.workspace-identity dd { margin: 0; font-size: 16px; line-height: 1.6; overflow-wrap: anywhere; }
-.workspace-availability { margin: 0; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; line-height: 1.8; }
+.workspace-identity dt { margin-bottom: 10px; color: var(--muted); font-size: 0.8125rem; }
+.workspace-identity dd { margin: 0; font-size: 1rem; line-height: 1.6; overflow-wrap: anywhere; }
+.workspace-availability { margin: 0; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.875rem; line-height: 1.8; }
 .retry-button { margin-top: 20px; }
 </style>

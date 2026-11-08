@@ -26,10 +26,10 @@ const destination = computed(() => auth.user ? homeRouteFor(auth.user.role) : 'l
 .forbidden-page { width: 680px; max-width: 100%; margin: 28px auto; padding: 44px 46px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
 .access-mark { display: grid; place-items: center; width: 58px; height: 58px; margin-bottom: 26px; border-radius: 9px; color: var(--navy); background: #e8f0f2; }
 .access-mark svg { width: 34px; height: 34px; }
-.forbidden-page h1 { margin: 0; font-size: 28px; line-height: 1.5; }
-.forbidden-page p { margin: 16px 0 28px; color: var(--muted); font-size: 15px; line-height: 1.8; }
+.forbidden-page h1 { margin: 0; font-size: 1.75rem; line-height: 1.5; }
+.forbidden-page p { margin: 16px 0 28px; color: var(--muted); font-size: 0.9375rem; line-height: 1.8; }
 .access-links { display: flex; align-items: center; gap: 26px; }
-.access-links a { font-size: 14px; text-decoration: none; }
+.access-links a { font-size: 0.875rem; text-decoration: none; }
 .access-links a:hover { text-decoration: underline; }
 .back-to-workspace { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 17px; border-radius: 6px; color: #fff; background: var(--teal); }
 .back-to-workspace:hover { color: #fff; background: #005650; }

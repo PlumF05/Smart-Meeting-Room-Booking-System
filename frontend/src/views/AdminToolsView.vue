@@ -283,15 +283,15 @@ onBeforeUnmount(() => { generation += 1 })
 .room-input { width: 175px; }
 .type-input { width: 150px; }
 .tool-alert { margin-bottom: 18px; }
-.tool-note { color: var(--muted); font-size: 14px; line-height: 1.8; }
+.tool-note { color: var(--muted); font-size: 0.875rem; line-height: 1.8; }
 .tool-pagination { margin-top: 22px; justify-content: flex-end; }
-.secondary { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; }
+.secondary { display: block; margin-top: 5px; color: var(--muted); font-size: 0.8125rem; }
 .statistics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
 .statistics-grid > div { padding: 22px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
-.statistics-grid span { display: block; color: var(--muted); font-size: 14px; }
-.statistics-grid strong { display: block; margin-top: 12px; font-size: 28px; color: var(--teal); }
+.statistics-grid span { display: block; color: var(--muted); font-size: 0.875rem; }
+.statistics-grid strong { display: block; margin-top: 12px; font-size: 1.75rem; color: var(--teal); }
 .reservation-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .operation-details { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-.operation-details dt { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.operation-details dt { color: var(--muted); font-size: 0.8125rem; margin-bottom: 8px; }
 .operation-details dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 </style>
