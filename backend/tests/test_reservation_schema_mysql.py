@@ -158,7 +158,6 @@ def test_room_rename_and_equipment_change_do_not_rewrite_reservation_snapshot(en
     {"attendees": 0}, {"attendees": -1}, {"attendees": 13},
     {"room_capacity_snapshot": 0}, {"room_capacity_snapshot": -1},
     {"ends_at": START}, {"ends_at": START - timedelta(minutes=30)},
-    {"title": ""}, {"title": "   "}, {"purpose": ""}, {"purpose": "   "},
     {"required_equipment": {}}, {"required_equipment": "白板"}, {"required_equipment": None},
     {"room_equipment_snapshot": {}}, {"room_equipment_snapshot": "投影仪"},
     {"status": "unknown"}, {"status": "PENDING"}, {"status": "pénding"},

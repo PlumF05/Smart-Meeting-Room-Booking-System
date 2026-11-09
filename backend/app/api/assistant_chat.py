@@ -101,8 +101,8 @@ async def chat(data: ChatInput, request: Request, user: User, db: Database, csrf
             await current_room(view)
             draft = view.draft
             payload = dict(room_id=view.selected_room.id, date=draft.date, start_time=draft.start_time,
-                end_time=draft.end_time, attendees=draft.attendees, title=draft.title,
-                purpose=draft.purpose, required_equipment=draft.equipment)
+                end_time=draft.end_time, attendees=draft.attendees, title=draft.title or "",
+                purpose=draft.purpose or "", required_equipment=draft.equipment)
             view.confirmation = await run_in_threadpool(service, confirmations.prepare_confirmation,
                 **actor, conversation_id=view.conversation_id, revision=view.revision, payload=payload)
         return view

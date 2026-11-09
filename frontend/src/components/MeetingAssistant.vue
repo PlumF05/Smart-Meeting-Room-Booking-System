@@ -16,7 +16,7 @@ const canPrepare = computed(() => {
   const current = view.value
   return current?.phase === 'summary' && !!current.selected_room && !!current.draft.date
     && !!current.draft.start_time && !!current.draft.end_time && !!current.draft.attendees
-    && !!current.draft.title?.trim() && !!current.draft.purpose?.trim()
+
 })
 let generation = 0
 let alive = true
@@ -149,8 +149,8 @@ onBeforeUnmount(() => { alive = false; reset() })
         <dl>
           <div><dt>日期与时段</dt><dd>{{ view.draft.date || '待补充日期' }} · {{ view.draft.start_time || '待补充开始时间' }} — {{ view.draft.end_time || '待补充结束时间' }}（北京时间）</dd></div>
           <div><dt>人数与设备</dt><dd>{{ view.draft.attendees ?? '待补充人数' }} 人 · {{ view.draft.equipment.join('、') || '未指定设备需求' }}</dd></div>
-          <div><dt>会议主题</dt><dd>{{ view.draft.title || '待补充' }}</dd></div>
-          <div><dt>用途</dt><dd>{{ view.draft.purpose || '待补充' }}</dd></div>
+          <div><dt>会议主题</dt><dd>{{ view.draft.title || '未填写（选填）' }}</dd></div>
+          <div><dt>用途</dt><dd>{{ view.draft.purpose || '未填写（选填）' }}</dd></div>
         </dl>
       </section>
       <section v-if="view.candidates.length" class="meeting-candidates" aria-labelledby="meeting-candidates-title">
@@ -176,8 +176,8 @@ onBeforeUnmount(() => { alive = false; reset() })
             <div><dt>动作</dt><dd>提交预约申请（本阶段尚未执行）</dd></div>
             <div><dt>日期与时段</dt><dd>{{ view.confirmation.summary.date }} · {{ view.confirmation.summary.start_time }} — {{ view.confirmation.summary.end_time }}（北京时间）</dd></div>
             <div><dt>人数与所需设备</dt><dd>{{ view.confirmation.summary.attendees }} 人 · {{ view.confirmation.summary.required_equipment.join('、') || '无' }}</dd></div>
-            <div><dt>主题</dt><dd>{{ view.confirmation.summary.title }}</dd></div>
-            <div><dt>用途</dt><dd>{{ view.confirmation.summary.purpose }}</dd></div>
+            <div><dt>主题</dt><dd>{{ view.confirmation.summary.title || '未填写' }}</dd></div>
+            <div><dt>用途</dt><dd>{{ view.confirmation.summary.purpose || '未填写' }}</dd></div>
             <div><dt>状态</dt><dd>{{ confirmationLabels[view.confirmation.state] }}</dd></div>
             <div><dt>有效至</dt><dd>{{ displayTime(view.confirmation.expires_at) }}（北京时间）</dd></div>
           </dl>

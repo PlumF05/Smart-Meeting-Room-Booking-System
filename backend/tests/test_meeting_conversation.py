@@ -101,10 +101,10 @@ def test_select_room_then_only_ask_missing_title_and_purpose_preserves_selection
         context = flow.TurnContext(None, search)
         view = await runtime.start(OWNER, TOKEN, "完整查询条件", context)
         view = await advance(runtime, view, context, "select", room_id=2)
-        assert view.phase == "clarify" and view.selected_room.id == 2
-        assert view.message == "请补充会议主题、用途。"
+        assert view.phase == "summary" and view.selected_room.id == 2
+        assert "确认后提交" in view.message
         view = await advance(runtime, view, context, message="主题课程设计")
-        assert view.phase == "clarify" and view.message == "请补充用途。"
+        assert view.phase == "summary"
         assert view.selected_room.id == 2 and view.draft.date == CORE["date"]
         view = await advance(runtime, view, context, message="讨论课程设计分工")
         assert view.phase == "summary" and view.selected_room.id == 2

@@ -18,7 +18,7 @@ def valid_request(**changes):
 
 
 def test_required_request_fields_are_required():
-    for field in ("room_id", "title", "purpose", "attendees", "date", "start_time", "end_time"):
+    for field in ("room_id", "attendees", "date", "start_time", "end_time"):
         data = valid_request()
         del data[field]
         with pytest.raises(ValidationError) as error:
@@ -52,8 +52,8 @@ def test_required_equipment_is_optional_with_independent_empty_default():
     ("room_id", True), ("room_id", 1.0), ("room_id", "1"),
     ("attendees", 0), ("attendees", -1), ("attendees", 2147483648),
     ("attendees", True), ("attendees", 8.0), ("attendees", "8"),
-    ("title", ""), ("title", " \n"), ("title", "题" * 201), ("title", 1),
-    ("purpose", ""), ("purpose", " \n"), ("purpose", "目" * 1001), ("purpose", 1),
+    ("title", "题" * 201), ("title", 1),
+    ("purpose", "目" * 1001), ("purpose", 1),
     ("date", None), ("date", "2026-2-08"), ("date", "2026-02-30"),
     ("date", "2026-11-08T00:00:00"), ("date", datetime(2026, 11, 8)),
     ("start_time", None), ("start_time", "9:00"), ("start_time", "09:00:00"),

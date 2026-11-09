@@ -122,7 +122,7 @@ def test_0004_and_0005_round_trip_preserves_existing_users_rooms_sessions_and_re
         assert {"operation_logs", "notifications"} <= set(inspect(connection).get_table_names())
         connection.rollback()
         command.upgrade(config, "head")
-        assert MigrationContext.configure(connection).get_current_revision() == "0005"
+        assert MigrationContext.configure(connection).get_current_revision() == "0006"
         assert "assistant_confirmations" in inspect(connection).get_table_names()
         connection.rollback()
         command.check(config)

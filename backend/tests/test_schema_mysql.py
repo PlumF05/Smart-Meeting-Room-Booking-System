@@ -37,7 +37,7 @@ def migration_config(connection):
 def test_migrations_round_trip_and_metadata_match(engine):
     with engine.connect() as connection:
         config = migration_config(connection)
-        assert MigrationContext.configure(connection).get_current_revision() == "0005"
+        assert MigrationContext.configure(connection).get_current_revision() == "0006"
         connection.rollback()
         command.current(config, check_heads=True)
         connection.rollback()
@@ -52,7 +52,7 @@ def test_migrations_round_trip_and_metadata_match(engine):
             "alembic_version", "users", "meeting_rooms", "login_sessions", "reservations",
             "operation_logs", "notifications", "assistant_confirmations",
         }
-        assert MigrationContext.configure(connection).get_current_revision() == "0005"
+        assert MigrationContext.configure(connection).get_current_revision() == "0006"
         connection.rollback()
         command.check(config)
 

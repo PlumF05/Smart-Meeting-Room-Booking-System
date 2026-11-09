@@ -16,8 +16,6 @@ class Reservation(Base):
         CheckConstraint("room_capacity_snapshot > 0", name="snapshot_capacity"),
         CheckConstraint("attendees <= room_capacity_snapshot", name="attendees_capacity"),
         CheckConstraint("ends_at > starts_at", name="time_order"),
-        CheckConstraint("CHAR_LENGTH(TRIM(title)) > 0", name="title"),
-        CheckConstraint("CHAR_LENGTH(TRIM(purpose)) > 0", name="purpose"),
         CheckConstraint("JSON_TYPE(required_equipment) = 'ARRAY'", name="required_equipment_array"),
         CheckConstraint("JSON_TYPE(room_equipment_snapshot) = 'ARRAY'", name="room_equipment_array"),
         CheckConstraint(

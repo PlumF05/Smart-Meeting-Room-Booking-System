@@ -107,8 +107,8 @@ onBeforeUnmount(() => { if (clock) clearInterval(clock) })
                   <div><dt>日期时段</dt><dd>{{ item.view.confirmation.summary.date }}<br />{{ item.view.confirmation.summary.start_time }}—{{ item.view.confirmation.summary.end_time }}（北京时间）</dd></div>
                   <div><dt>参会人数</dt><dd>{{ item.view.confirmation.summary.attendees }} 人</dd></div>
                   <div><dt>所需设备</dt><dd>{{ item.view.confirmation.summary.required_equipment.join('、') || '未指定' }}</dd></div>
-                  <div><dt>会议主题</dt><dd>{{ item.view.confirmation.summary.title }}</dd></div>
-                  <div><dt>用途</dt><dd>{{ item.view.confirmation.summary.purpose }}</dd></div>
+                  <div><dt>会议主题</dt><dd>{{ item.view.confirmation.summary.title || '未填写' }}</dd></div>
+                  <div><dt>用途</dt><dd>{{ item.view.confirmation.summary.purpose || '未填写' }}</dd></div>
                 </dl>
                 <p class="confirmation-expiry">{{ expired(item.view.confirmation.expires_at) ? '摘要已过期' : '确认有效至' }}：{{ time(item.view.confirmation.expires_at) }}</p>
                 <p class="card-caption">确认后提交申请并占位，仍需管理员审批。五分钟有效期不会因重复查看延长。</p>

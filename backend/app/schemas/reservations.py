@@ -14,8 +14,8 @@ class ReservationCreate(RoomWindowQuery):
     model_config = ConfigDict(extra="forbid", strict=True, hide_input_in_errors=True)
 
     room_id: int = Field(ge=1, le=9223372036854775807)
-    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
-    purpose: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
+    title: Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)] = ""
+    purpose: Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)] = ""
     attendees: int = Field(ge=1, le=2147483647)
     date: Date = Field(description="北京时间的预约日期，严格YYYY-MM-DD格式。")
     start_time: Time = Field(description="北京时间的开始时刻，严格HH:mm格式。")
@@ -23,6 +23,11 @@ class ReservationCreate(RoomWindowQuery):
     required_equipment: list[EquipmentName] = Field(
         default_factory=list, max_length=10, description="所需设备，会议室须全部具备。",
     )
+
+    @field_validator("title", "purpose", mode="before")
+    @classmethod
+    def optional_text(cls, value):
+        return "" if value is None else value
 
     @field_validator("required_equipment")
     @classmethod

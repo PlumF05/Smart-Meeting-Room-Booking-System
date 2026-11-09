@@ -28,6 +28,22 @@ _dialogue=ContextVar('assistant_dialogue',default={})
 _model_slots=asyncio.Semaphore(2)
 
 
+def booking_ambiguities(messages: list[str]) -> list[str]:
+    """模型的自然语言提示不能将选填资料重新变成预约前置条件。"""
+    optional_words=('主题','用途','目的','议题','会议内容','title','purpose')
+    required_words=('日期','时间','时段','几点','人数','多少人','几人','开始','结束',
+                    'date','time','attendee','people','start','end')
+    result=[]
+    for message in messages:
+        text=message.lower()
+        if any(word in text for word in optional_words):
+            if any(word in text for word in required_words):
+                result.append('预约日期、起止时间或人数尚有歧义，请明确这些条件。')
+            continue
+        result.append(message)
+    return list(dict.fromkeys(result))
+
+
 async def extract_demand(message,draft,settings):
     if not settings.enabled or not settings.is_configured:raise AIConnectionError('disabled')
     if _model_slots.locked():raise AIConnectionError('busy')
@@ -79,12 +95,13 @@ def build_graph():
                 return dict(notice='我可以帮你查找会议室，并在你核对完整摘要后提交预约申请。请告诉我日期、时间和人数。' if parsed.intent=='help' else '当前助手提供会议室查询和申请提交。你可以继续补充预约需求；其他功能请使用对应业务页面。',revision=max(1,state['revision']))
             updates={k:v for k,v in parsed.updates.model_dump(mode='json',exclude_unset=True).items() if v is not None}
             cleared=set(parsed.clear_fields)
+            ambiguities=booking_ambiguities(parsed.ambiguities)
             # 歧义不得沿用旧条件成为完整方案。模型未指出字段时保守重新确认查询条件。
-            if parsed.ambiguities and not cleared:
+            if ambiguities and not cleared:
                 cleared.update(('date','start_time','end_time','attendees'))
             updated=Demand.model_validate({**draft,**updates,**{k:None for k in cleared}}).model_dump()
             if any(updated[k]!=draft[k] for k in ('date','start_time','end_time','attendees','equipment')):selected=None
-            draft=updated;ambiguities=parsed.ambiguities
+            draft=updated
             if parsed.room_name:requested=parsed.room_name;selected=None
             if parsed.room_id is not None:
                 selected=next((r for r in visible if r['id']==parsed.room_id),None)
@@ -117,8 +134,7 @@ def build_graph():
             selected=next((r for r in rooms if r['id']==selected['id']),None)
             if selected is None:
                 return dict(phase='candidates',message='原选会议室当前不再满足条件，请重新选房；未自动更换。',rooms=rooms,selected_room=None,checked_at=found['checked_at'])
-            missing=[label for key,label in (('title','会议主题'),('purpose','用途')) if state['draft'][key] is None]
-            return dict(phase='clarify' if missing else 'summary',message='请补充'+'、'.join(missing)+'。' if missing else '请核对完整摘要，确认后提交申请。提交成功后仍需管理员审批。',
+            return dict(phase='summary',message='请核对完整摘要，确认后提交申请。提交成功后仍需管理员审批。',
                         rooms=rooms,selected_room=selected,checked_at=found['checked_at'])
         return dict(phase='candidates',message=f'找到{len(rooms)}间匹配会议室，请选择。查询不会占位。',rooms=rooms,checked_at=found['checked_at'])
     def wait_for_user(state):

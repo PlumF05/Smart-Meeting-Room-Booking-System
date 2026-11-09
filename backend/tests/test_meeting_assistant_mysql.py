@@ -69,7 +69,7 @@ def test_multi_turn_search_select_and_prepare_never_create_reservation(client, e
     view = event(client, headers, view, 'candidates', show_all=True).json()
     assert len(view['candidates']) == 10
     view = event(client, headers, view, 'select', room_id=view['candidates'][5]['id']).json()
-    assert view['phase'] == 'clarify' and '会议主题' in view['message'] and '用途' in view['message']
+    assert view['phase'] == 'summary'
     chosen = view['selected_room']['id']
     view = event(client, headers, view, 'message', message=json.dumps({
         'title': '讨论', 'purpose': '分配工作',

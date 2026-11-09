@@ -58,8 +58,8 @@ async function submit() {
   <ElDialog :model-value="true" :title="`预约 · ${room.name}`" width="680px" :close-on-click-modal="false" :before-close="() => { if (!busy) emit('close') }">
     <p>{{ room.location }} · 容量 {{ room.capacity }} 人；所有时间按北京时间填写。</p>
     <ElForm label-position="top" :disabled="busy || success" @submit.prevent="submit">
-      <ElFormItem label="会议主题"><ElInput v-model="form.title" maxlength="200" /></ElFormItem>
-      <ElFormItem label="用途"><ElInput v-model="form.purpose" type="textarea" maxlength="1000" /></ElFormItem>
+      <ElFormItem label="会议主题（选填）"><ElInput v-model="form.title" maxlength="200" /></ElFormItem>
+      <ElFormItem label="用途（选填）"><ElInput v-model="form.purpose" type="textarea" maxlength="1000" /></ElFormItem>
       <!-- 换房时保留原人数，避免控件按新房间容量静默降低需求；容量由后端复验。 -->
       <ElFormItem label="预计人数"><ElInputNumber v-model="form.attendees" :min="1" :max="2147483647" :precision="0" /></ElFormItem>
       <ElFormItem label="使用日期"><ElInput v-model="form.date" type="date" /></ElFormItem>

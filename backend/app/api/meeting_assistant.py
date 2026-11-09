@@ -112,7 +112,7 @@ async def prepare(identifier:str,data:RevisionInput,request:Request,user:User,db
                 raise flow.ConversationError('changed','所选会议室或时段情况已变化，请重新查询和选房。')
             draft=view.draft
             payload=dict(room_id=chosen['id'],date=draft.date,start_time=draft.start_time,end_time=draft.end_time,
-                         attendees=draft.attendees,title=draft.title,purpose=draft.purpose,required_equipment=draft.equipment)
+                         attendees=draft.attendees,title=draft.title or "",purpose=draft.purpose or "",required_equipment=draft.equipment)
             view.confirmation=await run_in_threadpool(confirmations.prepare_confirmation,db,user_id=user.id,
                 raw_token=token,csrf_token=csrf,conversation_id=identifier,revision=view.revision,payload=payload)
             await recheck(db,token)
