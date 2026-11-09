@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from app.api.auth import router as auth_router
 from app.api.assistant import router as assistant_router
 from app.api.meeting_assistant import router as meeting_assistant_router
+from app.api.assistant_chat import router as assistant_chat_router
 from app.api.errors import (
     database_unavailable_error_handler,
     invalid_credentials_error_handler,
@@ -49,6 +50,7 @@ app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(assistant_router)
 app.include_router(meeting_assistant_router)
+app.include_router(assistant_chat_router)
 app.include_router(workspace_router)
 app.include_router(rooms_router)
 app.include_router(reservations_router)

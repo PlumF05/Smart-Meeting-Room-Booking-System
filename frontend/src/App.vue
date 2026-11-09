@@ -4,7 +4,6 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { ElAlert, ElButton } from 'element-plus'
 import BrandMark from './components/BrandMark.vue'
 import TextSizeSwitch from './components/TextSizeSwitch.vue'
-import AssistantPanel from './components/AssistantPanel.vue'
 import { getErrorMessage } from './api/http'
 import { useAuthStore } from './stores/auth'
 import { homeRouteFor } from './router/permissions.ts'
@@ -55,6 +54,7 @@ async function retrySession() {
             <RouterLink :to="{ name: homeRoute }">工作台</RouterLink>
             <RouterLink :to="{ name: 'rooms' }">会议室查询</RouterLink>
             <RouterLink v-if="auth.user?.role === 'user'" :to="{ name: 'reservations' }">我的预约</RouterLink>
+            <RouterLink v-if="auth.user?.role === 'user'" :to="{ name: 'assistant' }">智能助手</RouterLink>
             <RouterLink v-if="auth.user?.role === 'admin'" :to="{ name: 'management' }">审批与资源维护</RouterLink>
             <RouterLink v-if="auth.user?.role === 'admin'" :to="{ name: 'admin-tools' }">管理工具</RouterLink>
             <RouterLink :to="{ name: 'messages' }">站内消息</RouterLink>
@@ -67,7 +67,6 @@ async function retrySession() {
           <RouterLink :to="{ name: 'login' }">登录</RouterLink>
           <RouterLink :to="{ name: 'register' }">注册</RouterLink>
         </nav>
-        <AssistantPanel />
         <TextSizeSwitch />
       </div>
     </header>
@@ -80,7 +79,7 @@ async function retrySession() {
       <ElAlert v-if="actionError" class="action-alert" :title="actionError" type="error" show-icon @close="actionError = ''" />
     </div>
 
-    <main :class="publicPage ? 'auth-layout' : 'account-layout'">
+    <main :class="publicPage ? 'auth-layout' : route.name === 'assistant' ? 'assistant-layout' : 'account-layout'">
       <aside v-if="publicPage" class="auth-story" aria-label="学院会议室预约">
         <div class="story-copy">
           <p class="story-intro">学院里的讨论，从这里开始</p>
@@ -116,6 +115,7 @@ async function retrySession() {
 
 <style scoped>
 .workspace-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.assistant-layout { width: min(1280px, calc(100% - 64px)); margin: 28px auto 32px; }
 .header-inner { width: min(1400px, calc(100% - 64px)); flex-wrap: wrap; padding-block: 16px; row-gap: 12px; }
 .header-account { gap: 14px; flex-wrap: wrap; }
 .header-user { max-width: 100px; }

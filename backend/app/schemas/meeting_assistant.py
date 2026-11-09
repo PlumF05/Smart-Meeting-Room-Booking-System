@@ -23,6 +23,9 @@ class ExtractedDemand(BaseModel):
     updates: Demand
     ambiguities: list[ShortText] = Field(default_factory=list,max_length=5)
     clear_fields: list[Literal['date','start_time','end_time','attendees','title','purpose']] = Field(default_factory=list,max_length=6)
+    intent: Literal['booking','help','unsupported'] = 'booking'
+    room_id: int | None = Field(default=None,ge=1)
+    room_name: ShortText | None = None
 
 
 class StartConversation(BaseModel):
@@ -58,3 +61,13 @@ class ConversationView(BaseModel):
     checked_at: str | None = None
     selected_room: RoomInfo | None = None
     confirmation: dict | None = None
+
+
+class ChatInput(BaseModel):
+    model_config=ConfigDict(extra='forbid',strict=True,hide_input_in_errors=True)
+    action: Literal['message','select','all','confirm','check']
+    message: MessageText | None = None
+    conversation_id: str | None = Field(default=None,pattern=r'^[A-Za-z0-9_-]{1,128}$')
+    revision: int | None = Field(default=None,ge=1)
+    room_id: int | None = Field(default=None,ge=1)
+    confirmation_id: str | None = Field(default=None,pattern=r'^[A-Za-z0-9_-]{43}$')

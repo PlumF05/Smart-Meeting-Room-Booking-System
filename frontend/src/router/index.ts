@@ -11,6 +11,7 @@ const router = createRouter({
     { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue'), meta: { guestOnly: true } },
     { path: '/account', name: 'account', component: () => import('../views/AccountView.vue'), meta: { requiresAuth: true } },
     { path: '/reservations', name: 'reservations', component: () => import('../views/ReservationsView.vue'), meta: { requiresAuth: true, roles: ['user'] } },
+    { path: '/assistant', name: 'assistant', component: () => import('../views/AssistantView.vue'), meta: { requiresAuth: true, roles: ['user'] } },
     { path: '/rooms', name: 'rooms', component: () => import('../views/RoomsView.vue'), meta: { requiresAuth: true } },
     { path: '/messages', name: 'messages', component: () => import('../views/InboxView.vue'), meta: { requiresAuth: true } },
     { path: '/workspace', name: 'workspace', component: () => import('../views/WorkspaceView.vue'), props: { role: 'user' }, meta: { requiresAuth: true, roles: ['user'] } },

@@ -168,13 +168,13 @@ def inspect_confirmation(db: Session, *, user_id: int, raw_token: str | None, cs
 
 
 def invalidate_conversation(db: Session, *, user_id: int, raw_token: str | None, csrf_token: str | None,
-                            conversation_id: str) -> None:
+                            conversation_id: str, before_revision: int | None = None) -> None:
     _context(conversation_id)
     try:
         with db.begin():
             _authorize(db, user_id, raw_token, csrf_token)
             for record in db.scalars(_matching(db, user_id, token_digest(raw_token), conversation_id)):
-                if record.state == "pending":
+                if record.state == "pending" and (before_revision is None or record.revision < before_revision):
                     record.state = "superseded"
             _authorize(db, user_id, raw_token, csrf_token, lock_login=True)
     except SQLAlchemyError:

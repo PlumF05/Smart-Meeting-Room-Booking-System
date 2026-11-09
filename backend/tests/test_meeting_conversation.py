@@ -85,7 +85,7 @@ def test_partial_demand_only_asks_missing_slots_and_all_candidates_does_not_call
         assert [room.id for room in second.candidates] == [1, 2, 3] and second.total == 4
         assert "不会占位" in second.message and second.selected_room is None
         expanded = await advance(runtime, second, context, "all")
-        assert len(expanded.candidates) == 4 and expanded.revision == 3
+        assert len(expanded.candidates) == 4 and expanded.revision == second.revision
         assert len(calls) == 2 and len(search.calls) == 2
         assert calls[1][1]["date"] == CORE["date"] and calls[1][1]["attendees"] == 8
 
@@ -109,7 +109,7 @@ def test_select_room_then_only_ask_missing_title_and_purpose_preserves_selection
         view = await advance(runtime, view, context, message="讨论课程设计分工")
         assert view.phase == "summary" and view.selected_room.id == 2
         assert view.draft.model_dump() == COMPLETE and view.revision == 4
-        assert view.confirmation is None and "不会提交" in view.message
+        assert view.confirmation is None and "确认后提交" in view.message
         assert len(calls) == 3 and len(search.calls) == 4
         state = runtime.graph.get_state(runtime.config(view.conversation_id)).values
         assert state["phase"] == "summary"
@@ -343,7 +343,7 @@ def test_before_advance_runs_inside_lock_only_after_revision_and_selection_check
             with pytest.raises(flow.ConversationError) as error:
                 await attempt(view.revision, {"kind": "all"})
             assert error.value.code == "busy" and effects == []
-        latest = await attempt(view.revision, {"kind": "all"})
+        latest = await attempt(view.revision, {"kind": "select", "room_id": 1})
         assert effects == ["invalidated"] and latest.revision == view.revision + 1
         with pytest.raises(flow.ConversationError) as error:
             await attempt(view.revision, {"kind": "all"})
