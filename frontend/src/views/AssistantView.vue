@@ -3,8 +3,11 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ElAlert, ElButton, ElInput } from 'element-plus'
 import { useAssistantChatStore } from '../stores/assistantChat.ts'
+import VoiceControls from '../components/VoiceControls.vue'
+import { useAssistantVoice } from '../voice/useAssistantVoice.ts'
 
 const chat = useAssistantChatStore()
+const voice = useAssistantVoice(chat)
 const log = ref<HTMLElement | null>(null)
 const composer = ref<InstanceType<typeof ElInput> | null>(null)
 const followBottom = ref(true)
@@ -33,9 +36,9 @@ watch(() => [chat.messages.length, chat.statusText, chat.error], async () => {
   else newMessages.value = true
 }, { flush: 'post' })
 
-async function send() { followBottom.value = true; await chat.send() }
-function sample(text: string) { chat.input = text; composer.value?.focus() }
-function modify() { chat.input = ''; composer.value?.focus() }
+async function send() { voice.pause('已切换为文字操作。'); followBottom.value = true; await chat.send() }
+function sample(text: string) { voice.pause('已切换为文字操作。'); chat.input = text; composer.value?.focus() }
+function modify() { voice.pause('请修改预约条件。'); chat.input = ''; composer.value?.focus() }
 function restart() { chat.newConversation(); followBottom.value = true; composer.value?.focus() }
 function keydown(event: Event | KeyboardEvent) {
   if (!('key' in event)) return
@@ -142,6 +145,13 @@ onBeforeUnmount(() => { if (clock) clearInterval(clock) })
         </div>
       </div>
       <button v-if="newMessages" class="new-messages" type="button" @click="bottom">有新消息，点击查看</button>
+      <VoiceControls :supported="voice.supported" :phase="voice.phase.value" :active="voice.active.value"
+        :status="voice.status.value" :preview="voice.preview.value" :error="voice.error.value"
+        :read-supported="voice.readSupported" :reading="voice.reading.value" :can-read="voice.canRead.value"
+        v-model:auto-read="voice.autoRead.value"
+        :disabled="!chat.canUse" :pending="chat.pending" :has-reply="chat.messages.some(item => item.role === 'assistant')"
+        @start="voice.start" @pause="voice.pause()" @stop="voice.stop" @replay="voice.replay"
+        @read="voice.readLatest" @stop-reading="voice.stopReading" />
       <form class="chat-composer" @submit.prevent="send">
         <label for="assistant-chat-input">描述或补充预约需求</label>
         <div class="composer-row">
@@ -197,7 +207,7 @@ dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .processing span { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
 .chat-error { max-width: 78%; margin-top: 16px; }
 .recovery-actions { display: flex; align-items: center; gap: 18px; margin-top: 16px; font-size: .8125rem; }
-.new-messages { position: absolute; bottom: 176px; left: 50%; transform: translateX(-50%); padding: 9px 17px; border: 1px solid #bdd3d0; border-radius: 20px; background: #e4f0ee; color: var(--teal); font-size: .8125rem; cursor: pointer; }
+.new-messages { position: sticky; align-self: center; bottom: 0; padding: 9px 17px; border: 1px solid #bdd3d0; border-radius: 20px; background: #e4f0ee; color: var(--teal); font-size: .8125rem; cursor: pointer; }
 .chat-composer { flex-shrink: 0; padding: 17px 26px 14px; border-top: 1px solid var(--border); background: #fff; }
 .chat-composer label { display: block; margin-bottom: 9px; color: var(--muted); font-size: .8125rem; }
 .composer-row { display: flex; align-items: flex-end; gap: 16px; }

@@ -211,7 +211,7 @@ onBeforeUnmount(() => { generation += 1 })
         <p class="section-note" role="status">{{ loadingBookings ? '正在读取预约…' : `当前列表 ${bookings.length} 条；点击详情核对用途、完整时段、容量和设备。` }}</p>
         <ElTable :data="bookings" row-key="id" class="management-table" aria-label="管理员预约列表" :aria-busy="loadingBookings" empty-text="暂无符合条件的预约">
           <ElTableColumn prop="id" label="编号" width="70" />
-          <ElTableColumn label="主题 / 申请人" min-width="175"><template #default="{ row }"><strong>{{ row.title }}</strong><span class="table-secondary">{{ row.applicant.full_name }}（{{ row.applicant.username }}）</span></template></ElTableColumn>
+          <ElTableColumn label="主题 / 申请人" min-width="175"><template #default="{ row }"><strong>{{ row.title || '未填写' }}</strong><span class="table-secondary">{{ row.applicant.full_name }}（{{ row.applicant.username }}）</span></template></ElTableColumn>
           <ElTableColumn prop="room_snapshot.name" label="申请时会议室" min-width="130" />
           <ElTableColumn label="使用时段" min-width="175"><template #default="{ row }">{{ formatTime(row.starts_at) }}<span class="table-secondary">至 {{ formatTime(row.ends_at) }}</span></template></ElTableColumn>
           <ElTableColumn label="人数 / 当时容量" width="130"><template #default="{ row }">{{ row.attendees }} / {{ row.room_snapshot.capacity }} 人</template></ElTableColumn>
@@ -239,11 +239,11 @@ onBeforeUnmount(() => { generation += 1 })
 
     <ElDialog :model-value="!!selected" title="预约详情" width="700px" @update:model-value="value => { if (!value) selected = null }">
       <template v-if="selected">
-        <h3 class="detail-title">#{{ selected.id }} {{ selected.title }}</h3>
+        <h3 class="detail-title">#{{ selected.id }} {{ selected.title || '未填写主题' }}</h3>
         <dl class="detail-fields">
           <div><dt>申请人</dt><dd>{{ selected.applicant.full_name }}（{{ selected.applicant.username }}）{{ selected.applicant.is_active ? '' : ' / 账号已停用' }}</dd></div>
           <div><dt>提交时间</dt><dd>{{ formatTime(selected.submitted_at) }}</dd></div>
-          <div class="detail-wide"><dt>用途</dt><dd>{{ selected.purpose }}</dd></div>
+          <div class="detail-wide"><dt>用途</dt><dd>{{ selected.purpose || '未填写' }}</dd></div>
           <div class="detail-wide"><dt>使用时段</dt><dd>{{ formatTime(selected.starts_at) }} 至 {{ formatTime(selected.ends_at) }}</dd></div>
           <div><dt>预计人数</dt><dd>{{ selected.attendees }} 人</dd></div>
           <div><dt>状态</dt><dd>{{ statusLabel(selected.status) }}</dd></div>
@@ -258,7 +258,7 @@ onBeforeUnmount(() => { generation += 1 })
     <ElDialog :model-value="!!decision" :title="decision ? `确认${actionLabels[decision.action]}预约` : '处理预约'" width="540px" :close-on-click-modal="false" :close-on-press-escape="!writing" :show-close="!writing" @update:model-value="value => { if (!value && !writing) decision = null }">
       <template v-if="decision">
         <ElAlert v-if="decisionError" class="page-notice" :title="decisionError" type="error" :closable="false" show-icon />
-        <p>确认{{ actionLabels[decision.action] }} #{{ decision.booking.id }}“{{ decision.booking.title }}”？</p>
+        <p>确认{{ actionLabels[decision.action] }} #{{ decision.booking.id }}“{{ decision.booking.title || '未填写主题' }}”？</p>
         <p class="section-note">{{ decision.action === 'approve' ? '批准前请核对用途、人数及当前会议室资料。' : decision.action === 'reject' ? '驳回后将通知申请人并释放预约时段。' : '撤销已批准的预约后将通知申请人并释放时段。' }}</p>
         <ElForm label-position="top"><ElFormItem :label="decision.action === 'approve' ? '审批备注（可选）' : '处理原因（必填）'"><ElInput v-model="decisionReason" type="textarea" :rows="4" maxlength="1000" show-word-limit :disabled="writing" /></ElFormItem></ElForm>
       </template>

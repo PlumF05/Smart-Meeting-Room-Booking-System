@@ -7,6 +7,7 @@ from threading import Barrier, Lock
 
 from alembic import command
 from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 import pytest
 from sqlalchemy import delete, event, func, select, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -67,7 +68,8 @@ def table_count(engine, model):
 def test_0005_round_trip_preserves_old_tables_and_matches_metadata(engine, world):
     before = {model.__tablename__:table_count(engine,model) for model in (User,MeetingRoom,LoginSession)}
     with engine.connect() as connection:
-        assert MigrationContext.configure(connection).get_current_revision() == "0005"
+        config = migration_config(connection)
+        assert MigrationContext.configure(connection).get_current_revision() == ScriptDirectory.from_config(config).get_current_head()
         connection.rollback()
         command.downgrade(migration_config(connection), "0004")
         command.upgrade(migration_config(connection), "head")

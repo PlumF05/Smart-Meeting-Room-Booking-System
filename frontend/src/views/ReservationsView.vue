@@ -109,7 +109,7 @@ async function remind(id: number) {
     <ElEmpty v-if="!busy && !rows.length" description="暂无预约记录" />
     <ElTable :data="rows" style="margin-top:20px">
       <ElTableColumn prop="id" label="编号" width="85" />
-      <ElTableColumn prop="title" label="主题" />
+      <ElTableColumn label="主题"><template #default="{ row }">{{ row.title || '未填写' }}</template></ElTableColumn>
       <ElTableColumn prop="room_snapshot.name" label="申请时会议室" />
       <ElTableColumn label="开始时间" width="190"><template #default="{ row }">{{ formatTime(row.starts_at) }}</template></ElTableColumn>
       <ElTableColumn label="状态" width="100"><template #default="{ row }">{{ labels[row.status] }}</template></ElTableColumn>
@@ -122,7 +122,7 @@ async function remind(id: number) {
     </ElTable>
     <ElDialog :model-value="!!selected" title="预约详情" width="650px" @close="selected = null">
       <template v-if="selected">
-        <p>主题：{{ selected.title }}</p><p>用途：{{ selected.purpose }}</p><p>人数：{{ selected.attendees }}</p>
+        <p>主题：{{ selected.title || '未填写' }}</p><p>用途：{{ selected.purpose || '未填写' }}</p><p>人数：{{ selected.attendees }}</p>
         <p>时段：{{ formatTime(selected.starts_at) }} — {{ formatTime(selected.ends_at) }}</p>
         <p>状态：{{ labels[selected.status] }}；原因：{{ selected.status_reason || '无' }}</p>
         <p v-if="selected.has_reminded">已催办</p>
@@ -135,7 +135,7 @@ async function remind(id: number) {
     </ElDialog>
     <ElDialog :model-value="!!cancelTarget" title="确认取消预约" width="500px" :close-on-click-modal="false" :before-close="() => { if (!busy) cancelTarget = null }">
       <ElAlert v-if="error" :title="error" type="error" :closable="false" />
-      <p>确认取消 {{ cancelTarget?.title }}？取消后立即释放时段，原记录保留。</p>
+      <p>确认取消 #{{ cancelTarget?.id }}“{{ cancelTarget?.title || '未填写主题' }}”？取消后立即释放时段，原记录保留。</p>
       <ElInput v-model="reason" type="textarea" maxlength="1000" placeholder="取消原因（可选）" :disabled="busy" />
       <template #footer><ElButton :disabled="busy" @click="cancelTarget = null">返回</ElButton><ElButton type="danger" :loading="busy" @click="cancel">确认取消</ElButton></template>
     </ElDialog>

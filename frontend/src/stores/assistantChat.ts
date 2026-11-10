@@ -26,6 +26,7 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
   const error = ref('')
   const outcomeUnknown = ref(false)
   const unverifiedPlan = ref(false)
+  const resetVersion = ref(0)
   const canUse = computed(() => auth.isAuthenticated && auth.user?.role === 'user' && !auth.pending)
   let generation = 0
   let serial = 0
@@ -42,6 +43,7 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
 
   function clear(remote = false) {
     generation += 1
+    resetVersion.value += 1
     controller?.abort(); controller = null
     if (remote) release()
     messages.value = []; input.value = ''; view.value = null; owner = null
@@ -72,7 +74,7 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
       && credential?.state === 'pending' && new Date(credential.expires_at).getTime() > now
   }
 
-  async function request(data: ChatRequest, userText: string) {
+  async function request(data: ChatRequest, userText: string, clearInput = false) {
     if (!canUse.value || pending.value || !auth.csrfToken || !auth.user) return
     const currentOwner = { id: auth.user.id, session: auth.sessionChangeCount, csrf: auth.csrfToken }
     const version = ++generation
@@ -105,7 +107,7 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
         messageReceived = true
       }, requestController.signal)
       if (!active()) return
-      if (input.value === inputAtStart) input.value = ''
+      if (clearInput && input.value === inputAtStart) input.value = ''
       if (!messageReceived) throw new ChatStreamError(null, '没有收到完整结果，请重试。')
     } catch (failure) {
       if (!active()) return
@@ -125,10 +127,10 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
     return view.value ? { conversation_id: view.value.conversation_id, revision: view.value.revision } : {}
   }
 
-  async function send() {
+  async function sendText(raw: string, clearInput = false) {
     if (outcomeUnknown.value) { error.value = '请先核对上一次提交结果，再继续对话。'; return }
     expireIdle()
-    const text = input.value.trim()
+    const text = raw.trim()
     if (!text || Array.from(text).length > 500) { error.value = '请输入1至500个字符的预约需求。'; return }
     const explicitConfirm = CONFIRM_WORDS.test(text)
     if (explicitConfirm && !canConfirm()) {
@@ -137,8 +139,10 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
     }
     const data: ChatRequest = { action: 'message', message: text, ...currentData() }
     if (explicitConfirm && view.value?.confirmation) data.confirmation_id = view.value.confirmation.confirmation_id
-    await request(data, text)
+    await request(data, text, clearInput)
   }
+
+  async function send() { await sendText(input.value, true) }
 
   async function selectRoom(roomId: number) {
     if (outcomeUnknown.value || !view.value?.candidates.some(room => room.id === roomId && room.is_active)) return
@@ -169,6 +173,6 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
   watch([() => auth.user?.id, () => auth.user?.role, () => auth.status,
     () => auth.sessionChangeCount, () => auth.csrfToken, () => auth.pending], () => clear(), { flush: 'sync' })
 
-  return { messages, input, view, pending, statusText, error, outcomeUnknown, unverifiedPlan, canUse,
-    newConversation, expireIdle, isCurrentMessage, canConfirm, send, selectRoom, showAll, confirm, check, renewSummary }
+  return { messages, input, view, pending, statusText, error, outcomeUnknown, unverifiedPlan, canUse, resetVersion,
+    newConversation, expireIdle, isCurrentMessage, canConfirm, send, sendText, selectRoom, showAll, confirm, check, renewSummary }
 })
