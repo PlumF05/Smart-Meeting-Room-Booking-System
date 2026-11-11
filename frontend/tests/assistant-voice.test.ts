@@ -3,6 +3,7 @@ import { afterEach, beforeEach, test } from 'node:test'
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { effectScope, type EffectScope } from 'vue'
 import { assistantChatApi, ChatStreamError, type ChatRequest, type SubmissionResult } from '../src/api/assistantChat.ts'
+import { assistantApi } from '../src/api/assistant.ts'
 import { meetingAssistantApi, type AssistantConfirmation, type ConversationView } from '../src/api/meetingAssistant.ts'
 import { useAssistantChatStore } from '../src/stores/assistantChat.ts'
 import { useAuthStore } from '../src/stores/auth.ts'
@@ -62,6 +63,7 @@ class FakeOutput implements SpeechOutput {
 }
 
 const originalStream = assistantChatApi.stream
+const originalAskRules = assistantApi.askRules
 const originalClose = meetingAssistantApi.close
 const originalFetch = globalThis.fetch
 let pinia: ReturnType<typeof createPinia>
@@ -103,11 +105,35 @@ beforeEach(() => {
   chat = useAssistantChatStore()
   globalThis.fetch = async () => { throw new Error('语音轮次测试不得连接真实网络') }
   assistantChatApi.stream = async () => { throw new Error('未配置接口替身') }
+  assistantApi.askRules = async () => { throw new Error('未配置规则接口替身') }
   meetingAssistantApi.close = async () => {}
 })
 afterEach(() => {
   scopes.forEach(scope => scope.stop()); disposePinia(pinia)
   assistantChatApi.stream = originalStream; meetingAssistantApi.close = originalClose; globalThis.fetch = originalFetch
+  assistantApi.askRules = originalAskRules
+})
+
+test('连续语音自动回答规则，朗读后可直接继续预约', async () => {
+  const calls: string[] = []
+  assistantApi.askRules = async question => {
+    calls.push(question)
+    return { answer: '预约需要管理员审批。', grounded: true, sources: [], knowledge_version: 'test' }
+  }
+  assistantChatApi.stream = async (data, _, emit) => {
+    calls.push(data.message!)
+    emit({ type: 'view', data: view() })
+  }
+  const { voice, input, output } = setupVoice()
+  voice.start()
+  await until(() => input.calls.length === 1)
+  input.final('预约需要审批吗？')
+  await until(() => input.calls.length === 2)
+  assert.equal(output.texts.at(-1), '预约需要管理员审批。')
+  input.final('明天十四点到十五点，六个人')
+  await until(() => input.calls.length === 3)
+  assert.match(output.texts.at(-1)!, /研讨室101/u)
+  assert.deepEqual(calls, ['预约需要审批吗？', '明天十四点到十五点，六个人'])
 })
 
 test('模拟语音闭环：查询、选房、完整摘要、明确确认、实际待审批记录，完成后不再开启麦克风', async () => {

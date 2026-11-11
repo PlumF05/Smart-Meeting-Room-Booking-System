@@ -1,12 +1,12 @@
 """登录会话的建立、检查和撤销；不依赖浏览器或HTTP对象。"""
 
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
-from functools import lru_cache
 import hashlib
 import hmac
 import re
 import secrets
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from functools import lru_cache
 
 from pwdlib.exceptions import UnknownHashError
 from sqlalchemy import select, update
@@ -60,8 +60,12 @@ def dummy_password_hash() -> str:
 def session_info(record: LoginSession, user: User) -> SessionInfo:
     return SessionInfo(
         user=CurrentUser(
-            id=user.id, username=user.username, full_name=user.full_name,
-            identity_type=user.identity_type, role=user.role, is_active=user.is_active,
+            id=user.id,
+            username=user.username,
+            full_name=user.full_name,
+            identity_type=user.identity_type,
+            role=user.role,
+            is_active=user.is_active,
         ),
         csrf_token=record.csrf_token,
         expires_at=record.expires_at.replace(tzinfo=UTC),
@@ -70,8 +74,11 @@ def session_info(record: LoginSession, user: User) -> SessionInfo:
 
 def assert_session_valid(record: LoginSession | None, user: User | None) -> None:
     if (
-        record is None or user is None or record.revoked_at is not None
-        or record.expires_at <= utc_now() or not user.is_active
+        record is None
+        or user is None
+        or record.revoked_at is not None
+        or record.expires_at <= utc_now()
+        or not user.is_active
         or record.session_version != user.session_version
     ):
         raise InvalidSessionError()
@@ -84,8 +91,9 @@ def login_user(
         # 只取标量快照，验证密码后再次加锁读取，避免使用ORM缓存的旧启停状态。
         with session.begin():
             snapshot = session.execute(
-                select(User.id, User.password_hash, User.session_version)
-                .where(User.username == data.username)
+                select(User.id, User.password_hash, User.session_version).where(
+                    User.username == data.username
+                )
             ).one_or_none()
         encoded = snapshot.password_hash if snapshot else dummy_password_hash()
         try:
@@ -97,11 +105,14 @@ def login_user(
 
         with session.begin():
             user = session.scalar(
-                select(User).where(User.id == snapshot.id).with_for_update()
+                select(User)
+                .where(User.id == snapshot.id)
+                .with_for_update()
                 .execution_options(populate_existing=True)
             )
             if (
-                user is None or not user.is_active
+                user is None
+                or not user.is_active
                 or user.session_version != snapshot.session_version
                 or user.password_hash != snapshot.password_hash
             ):
@@ -111,22 +122,29 @@ def login_user(
                 # 当前浏览器换号/重复登录时撤销它的旧凭证，其他浏览器会话保留。
                 session.execute(
                     update(LoginSession)
-                    .where(LoginSession.token_hash == token_digest(previous_token),
-                           LoginSession.revoked_at.is_(None))
+                    .where(
+                        LoginSession.token_hash == token_digest(previous_token),
+                        LoginSession.revoked_at.is_(None),
+                    )
                     .values(revoked_at=now)
                 )
             raw_token = secrets.token_urlsafe(32)
             record = LoginSession(
-                token_hash=token_digest(raw_token), user_id=user.id,
-                csrf_token=secrets.token_urlsafe(32), session_version=user.session_version,
-                created_at=now, expires_at=now + SESSION_LIFETIME,
+                token_hash=token_digest(raw_token),
+                user_id=user.id,
+                csrf_token=secrets.token_urlsafe(32),
+                session_version=user.session_version,
+                created_at=now,
+                expires_at=now + SESSION_LIFETIME,
             )
             session.add(record)
             session.flush()
             result = LoginResult(info=session_info(record, user), token=raw_token)
         record_test_account(
-            user_id=result.info.user.id, username=result.info.user.username,
-            password=data.password.get_secret_value(), source="login",
+            user_id=result.info.user.id,
+            username=result.info.user.username,
+            password=data.password.get_secret_value(),
+            source="login",
         )
         return result
     except SQLAlchemyError:
@@ -139,7 +157,8 @@ def get_session_info(session: Session, raw_token: str | None) -> SessionInfo:
     try:
         with session.begin():
             pair = session.execute(
-                select(LoginSession, User).join(User, LoginSession.user_id == User.id)
+                select(LoginSession, User)
+                .join(User, LoginSession.user_id == User.id)
                 .where(LoginSession.token_hash == token_digest(raw_token))
                 .execution_options(populate_existing=True)
             ).one_or_none()
@@ -168,11 +187,15 @@ def logout_user(
                 raise InvalidSessionError()
             # 与之后的账户停用服务保持一致：先锁用户，再锁会话。
             user = session.scalar(
-                select(User).where(User.id == user_id).with_for_update()
+                select(User)
+                .where(User.id == user_id)
+                .with_for_update()
                 .execution_options(populate_existing=True)
             )
             record = session.scalar(
-                select(LoginSession).where(LoginSession.token_hash == digest).with_for_update()
+                select(LoginSession)
+                .where(LoginSession.token_hash == digest)
+                .with_for_update()
                 .execution_options(populate_existing=True)
             )
             assert_session_valid(record, user)

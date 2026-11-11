@@ -1,17 +1,20 @@
-import type { UserRole } from '../types/auth.ts'
+import type { UserRole } from "../types/auth.ts";
 
-export function homeRouteFor(role: UserRole): 'admin' | 'workspace' {
-  return role === 'admin' ? 'admin' : 'workspace'
+export function homeRouteFor(role: UserRole): "management" | "rooms" {
+  return role === "admin" ? "management" : "rooms";
 }
 
-export function roleAllowed(role: UserRole, allowedRoles?: readonly UserRole[]): boolean {
-  return allowedRoles === undefined || allowedRoles.includes(role)
+export function roleAllowed(
+  role: UserRole,
+  allowedRoles?: readonly UserRole[],
+): boolean {
+  return allowedRoles === undefined || allowedRoles.includes(role);
 }
 
-declare module 'vue-router' {
+declare module "vue-router" {
   interface RouteMeta {
-    guestOnly?: boolean
-    requiresAuth?: boolean
-    roles?: readonly UserRole[]
+    guestOnly?: boolean;
+    requiresAuth?: boolean;
+    roles?: readonly UserRole[];
   }
 }

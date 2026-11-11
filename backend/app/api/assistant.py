@@ -1,5 +1,5 @@
-from typing import Annotated
 import secrets
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -13,19 +13,30 @@ from app.core.auth_config import SESSION_COOKIE_NAME
 from app.db.session import get_db
 from app.schemas.assistant import RuleAnswer, RuleQuestion
 from app.schemas.auth import CurrentUser
-from app.services.login import get_session_info, InvalidCsrfError, valid_token_format
+from app.services.login import InvalidCsrfError, get_session_info, valid_token_format
 
-router = APIRouter(prefix="/api/assistant", tags=["规则助手"], dependencies=[Depends(require_trusted_origin)])
+router = APIRouter(
+    prefix="/api/assistant",
+    tags=["规则助手"],
+    dependencies=[Depends(require_trusted_origin)],
+)
 
 
-@router.post("/rules/ask", response_model=RuleAnswer, summary="只读规则问答，不执行预约操作")
-async def ask(data: RuleQuestion, request: Request,
+@router.post(
+    "/rules/ask", response_model=RuleAnswer, summary="只读规则问答，不执行预约操作"
+)
+async def ask(
+    data: RuleQuestion,
+    request: Request,
     user: Annotated[CurrentUser, Depends(require_regular_user)],
     db: Annotated[Session, Depends(get_db)],
-    csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None):
+    csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None,
+):
     token = request.cookies.get(SESSION_COOKIE_NAME)
     info = await run_in_threadpool(get_session_info, db, token)
-    if not valid_token_format(csrf_token) or not secrets.compare_digest(info.csrf_token, csrf_token):
+    if not valid_token_format(csrf_token) or not secrets.compare_digest(
+        info.csrf_token, csrf_token
+    ):
         raise InvalidCsrfError()
     try:
         settings = load_ai_settings()

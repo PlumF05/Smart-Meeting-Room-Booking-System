@@ -2,13 +2,17 @@ import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { assistantChatApi, ChatStreamError, type ChatRequest, type SubmissionResult } from '../api/assistantChat.ts'
 import { meetingAssistantApi, type ConversationView } from '../api/meetingAssistant.ts'
-import { getErrorMessage } from '../api/http.ts'
+import { assistantApi, type RulesAnswer } from '../api/assistant.ts'
+import { ApiError, getErrorMessage } from '../api/http.ts'
 import { useAuthStore } from './auth.ts'
+import { isRuleQuestion } from './assistantIntent.ts'
 
 export interface ChatMessage {
   id: number
   role: 'user' | 'assistant'
   text: string
+  kind?: 'rules'
+  rulesAnswer?: RulesAnswer
   view?: ConversationView
   result?: SubmissionResult
 }
@@ -74,7 +78,7 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
       && credential?.state === 'pending' && new Date(credential.expires_at).getTime() > now
   }
 
-  async function request(data: ChatRequest, userText: string, clearInput = false) {
+  async function request(data: ChatRequest | { action: 'rules' }, userText: string, clearInput = false) {
     if (!canUse.value || pending.value || !auth.csrfToken || !auth.user) return
     const currentOwner = { id: auth.user.id, session: auth.sessionChangeCount, csrf: auth.csrfToken }
     const version = ++generation
@@ -82,13 +86,23 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
       && auth.sessionChangeCount === currentOwner.session && auth.csrfToken === currentOwner.csrf
     const requestController = new AbortController()
     controller = requestController; owner = currentOwner; pending.value = true
-    error.value = ''; statusText.value = '正在连接助手…'
+    error.value = ''; statusText.value = data.action === 'rules' ? '正在检索规则并生成回答…' : '正在连接助手…'
     const submitting = data.action === 'confirm' || (data.action === 'message' && CONFIRM_WORDS.test(data.message?.trim() ?? ''))
     if (['message', 'select', 'all'].includes(data.action) && !submitting) unverifiedPlan.value = true
     const inputAtStart = input.value
-    messages.value.push({ id: ++serial, role: 'user', text: userText })
+    messages.value.push({ id: ++serial, role: 'user', text: userText,
+      kind: data.action === 'rules' ? 'rules' : undefined })
     let messageReceived = false
     try {
+      if (data.action === 'rules') {
+        const answer = await assistantApi.askRules(userText, currentOwner.csrf, requestController.signal)
+        if (!active()) return
+        touchedAt = Date.now()
+        messages.value.push({ id: ++serial, role: 'assistant', text: answer.answer,
+          kind: 'rules', rulesAnswer: answer })
+        if (clearInput && input.value === inputAtStart) input.value = ''
+        return
+      }
       await assistantChatApi.stream(data, currentOwner.csrf, event => {
         if (!active()) return
         touchedAt = Date.now()
@@ -111,6 +125,11 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
       if (!messageReceived) throw new ChatStreamError(null, '没有收到完整结果，请重试。')
     } catch (failure) {
       if (!active()) return
+      if (data.action === 'rules') {
+        error.value = getErrorMessage(failure)
+        if (failure instanceof ApiError && failure.status === 401) await auth.restoreSession(true).catch(() => {})
+        return
+      }
       const knownRejection = failure instanceof ChatStreamError && failure.status !== null
         && failure.status >= 400 && failure.status < 500 && !failure.outcomeUnknown
       if ((submitting && !knownRejection) || data.action === 'check' || (failure instanceof ChatStreamError && failure.outcomeUnknown)) {
@@ -131,8 +150,12 @@ export const useAssistantChatStore = defineStore('assistant-chat', () => {
     if (outcomeUnknown.value) { error.value = '请先核对上一次提交结果，再继续对话。'; return }
     expireIdle()
     const text = raw.trim()
-    if (!text || Array.from(text).length > 500) { error.value = '请输入1至500个字符的预约需求。'; return }
+    if (!text || Array.from(text).length > 500) { error.value = '请输入1至500个字符。'; return }
     const explicitConfirm = CONFIRM_WORDS.test(text)
+    if (!explicitConfirm && isRuleQuestion(text)) {
+      await request({ action: 'rules' }, text, clearInput)
+      return
+    }
     if (explicitConfirm && !canConfirm()) {
       error.value = '请先核对当前完整摘要；摘要已失效时，发送补充条件重新生成后再确认。'
       return

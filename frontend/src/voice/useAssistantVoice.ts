@@ -26,7 +26,7 @@ export function useAssistantVoice(chat: ChatStore, options: VoiceOptions = {}) {
   const error = ref('')
   const hint = ref('')
   const status = computed(() => hint.value || ({ idle: '语音未开启', preparing: '正在等待麦克风开始采集…',
-    listening: '麦克风已开始采集，现在请说', working: '正在处理预约，请稍候…', speaking: '正在朗读，麦克风已关闭',
+    listening: '麦克风已开始采集，现在请说', working: '正在处理消息，请稍候…', speaking: '正在朗读，麦克风已关闭',
     paused: '语音已暂停', completed: '预约申请已办理，语音已结束' }[phase.value]))
   let epoch = 0
   let controller: AbortController | null = null
@@ -35,9 +35,11 @@ export function useAssistantVoice(chat: ChatStore, options: VoiceOptions = {}) {
   let spokenConfirmationId: string | undefined
   let requestBaseline = 0
   let requestResetVersion = chat.resetVersion
+  const latest = (bookingOnly = false) => [...chat.messages].reverse().find(message =>
+    message.role === 'assistant' && (!bookingOnly || message.kind !== 'rules'))
   const reading = computed(() => active.value && readout.value)
   const canRead = computed(() => readSupported && chat.canUse && !chat.pending && !chat.error
-    && !chat.outcomeUnknown && !chat.unverifiedPlan && chat.messages.some(message => message.role === 'assistant'))
+    && !chat.outcomeUnknown && !!latest() && (!chat.unverifiedPlan || latest()?.kind === 'rules'))
 
   function interrupt() {
     epoch++
@@ -53,7 +55,6 @@ export function useAssistantVoice(chat: ChatStore, options: VoiceOptions = {}) {
   function stop() {
     interrupt(); phase.value = 'idle'; preview.value = ''; hint.value = ''; error.value = ''
   }
-  const latest = () => [...chat.messages].reverse().find(message => message.role === 'assistant')
 
   function waitForRequest(signal: AbortSignal) {
     if (!chat.pending) return Promise.resolve()
@@ -83,11 +84,11 @@ export function useAssistantVoice(chat: ChatStore, options: VoiceOptions = {}) {
       phase.value = 'speaking'; hint.value = ''
       await output.speak(text, current.signal)
     }
-    const read = async () => {
-      const message = latest()
+    const read = async (includeRules = readOnly) => {
+      const message = latest(!includeRules)
       if (!message) { await say(INTRO); return false }
       if (chat.outcomeUnknown) { await say(UNKNOWN); return false }
-      if (chat.unverifiedPlan) {
+      if (chat.unverifiedPlan && message.kind !== 'rules') {
         await say('当前条件尚未重新核实，请补充预约条件，重新查询后再确认。')
         return false
       }
@@ -112,7 +113,7 @@ export function useAssistantVoice(chat: ChatStore, options: VoiceOptions = {}) {
         phase.value = 'working'
         await waitForRequest(current.signal)
         if (!valid()) return
-        const message = latest()
+        const message = latest(!readOnly)
         if (chat.outcomeUnknown) await say(UNKNOWN)
         else if (forceRead || !message || message.id !== lastSpoken || !!chat.view?.confirmation) {
           if (await read()) return
@@ -129,7 +130,10 @@ export function useAssistantVoice(chat: ChatStore, options: VoiceOptions = {}) {
           const command = text.replace(/\s/gu, '').replace(/[。！？!?，,；;]+$/u, '')
           if (['停止语音', '退出语音'].includes(command)) { stop(); return }
           if (command === '暂停语音') { pause(); return }
-          if (['重听回复', '重听摘要', '重听候选'].includes(command)) { if (await read()) return; continue }
+          if (['重听回复', '重听摘要', '重听候选'].includes(command)) {
+            if (await read(command === '重听回复')) return
+            continue
+          }
           if (chat.outcomeUnknown && command !== '核对提交结果') { await say(UNKNOWN); continue }
           if (CONFIRM.test(command)) {
             if (!chat.canConfirm()) {
@@ -161,7 +165,7 @@ export function useAssistantVoice(chat: ChatStore, options: VoiceOptions = {}) {
             error.value = message; active.value = false; phase.value = 'paused'; controller = null
             return
           }
-          if (await read()) return
+          if (await read(chat.messages.at(-1)?.kind === 'rules')) return
         }
       } catch (failure) {
         if (!valid()) return

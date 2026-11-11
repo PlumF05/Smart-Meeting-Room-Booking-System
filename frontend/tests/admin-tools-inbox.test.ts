@@ -20,6 +20,7 @@ function component(name: string) {
   const moduleObject = { exports: {} as { default?: vue.Component } }
   const imports: Record<string, unknown> = {
     vue, 'element-plus': elements, '../api/http.ts': api, '../stores/auth.ts': authModule,
+    '../components/ListPagination.vue': { default: {} },
     'vue-router': { RouterLink: {}, useRouter: () => ({ replace: async (route: unknown) => { redirects.push(route) } }) },
   }
   new Function('require', 'module', 'exports', javascript)((key: string) => {

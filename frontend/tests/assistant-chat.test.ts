@@ -3,6 +3,7 @@ import { afterEach, beforeEach, test } from 'node:test'
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import { assistantChatApi, ChatStreamError, type ChatEvent, type ChatRequest, type SubmissionResult } from '../src/api/assistantChat.ts'
+import { http } from '../src/api/http.ts'
 import { meetingAssistantApi, type AssistantConfirmation, type ConversationView } from '../src/api/meetingAssistant.ts'
 import { useAssistantChatStore } from '../src/stores/assistantChat.ts'
 import { useAuthStore } from '../src/stores/auth.ts'
@@ -61,6 +62,22 @@ afterEach(() => {
   disposePinia(pinia)
   assistantChatApi.stream = originalStream; globalThis.fetch = originalFetch
   meetingAssistantApi.close = originalClose; Date.now = originalNow
+})
+
+test('关闭当前对话使用编码后的 DELETE 路径并携带 CSRF', async () => {
+  const adapter = http.defaults.adapter
+  try {
+    http.defaults.adapter = async config => {
+      assert.equal(config.method, 'delete')
+      assert.equal(config.url, '/assistant/conversations/synthetic%2Fconversation')
+      assert.equal(config.headers.get('X-CSRF-Token'), auth.csrfToken)
+      assert.equal(config.timeout, 65_000)
+      return { config, data: null, status: 204, statusText: 'No Content', headers: {} }
+    }
+    await originalClose('synthetic/conversation', auth.csrfToken)
+  } finally {
+    http.defaults.adapter = adapter
+  }
 })
 
 test('SSE按分片及CRLF解析中文，POST携带Cookie/CSRF且收到done后才完成', async () => {

@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, Path, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.auth_dependencies import require_regular_user, require_trusted_origin
@@ -21,15 +21,17 @@ from app.services.reservations import (
 )
 from app.services.rooms import RoomNotFoundError
 
-
 router = APIRouter(
-    prefix="/api/reservations", tags=["预约"],
+    prefix="/api/reservations",
+    tags=["预约"],
     dependencies=[Depends(require_trusted_origin)],
 )
 
 
 @router.post(
-    "", response_model=ReservationCreated, status_code=status.HTTP_201_CREATED,
+    "",
+    response_model=ReservationCreated,
+    status_code=status.HTTP_201_CREATED,
     summary="提交会议室预约申请",
     description=(
         "仅普通用户可提交。校验CSRF令牌及最新时间、资源和占位规则后，"
@@ -45,32 +47,48 @@ router = APIRouter(
     },
 )
 def submit_reservation(
-    data: ReservationCreate, request: Request,
+    data: ReservationCreate,
+    request: Request,
     user: Annotated[CurrentUser, Depends(require_regular_user)],
     session: Annotated[Session, Depends(get_db)],
     csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None,
 ) -> ReservationCreated:
     try:
         return create_reservation(
-            session, data, user_id=user.id,
-            raw_token=request.cookies.get(SESSION_COOKIE_NAME), csrf_token=csrf_token,
+            session,
+            data,
+            user_id=user.id,
+            raw_token=request.cookies.get(SESSION_COOKIE_NAME),
+            csrf_token=csrf_token,
         )
     except ReservationPermissionError:
         raise HTTPException(status_code=403, detail="当前账号无权提交预约。") from None
     except RoomNotFoundError:
         raise HTTPException(status_code=404, detail="会议室不存在。") from None
     except RoomInactiveError:
-        raise HTTPException(status_code=409, detail="会议室已停用，无法提交预约。") from None
+        raise HTTPException(
+            status_code=409, detail="会议室已停用，无法提交预约。"
+        ) from None
     except PersonalConflictError:
-        raise HTTPException(status_code=409, detail="您在所选时段已有其他预约。") from None
+        raise HTTPException(
+            status_code=409, detail="您在所选时段已有其他预约。"
+        ) from None
     except RoomConflictError:
-        raise HTTPException(status_code=409, detail="当前会议室在所选时段已有预约。") from None
+        raise HTTPException(
+            status_code=409, detail="当前会议室在所选时段已有预约。"
+        ) from None
     except (BookingTimeError, ReservationRuleError) as error:
         raise HTTPException(status_code=422, detail=str(error)) from None
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from app.services.my_reservations import read_mine, cancel_mine, ReservationNotFoundError, CancellationConflictError
+
+from app.services.my_reservations import (
+    CancellationConflictError,
+    ReservationNotFoundError,
+    cancel_mine,
+    read_mine,
+)
 
 
 class CancelRequest(BaseModel):
@@ -79,12 +97,19 @@ class CancelRequest(BaseModel):
 
 
 @router.get("", summary="查询本人预约")
-def my_list(user: Annotated[CurrentUser, Depends(require_regular_user)], session: Annotated[Session, Depends(get_db)]):
+def my_list(
+    user: Annotated[CurrentUser, Depends(require_regular_user)],
+    session: Annotated[Session, Depends(get_db)],
+):
     return read_mine(session, user.id)
 
 
 @router.get("/{reservation_id}", summary="查询本人预约详情")
-def my_detail(reservation_id: Annotated[int, Path(ge=1, le=9223372036854775807)], user: Annotated[CurrentUser, Depends(require_regular_user)], session: Annotated[Session, Depends(get_db)]):
+def my_detail(
+    reservation_id: Annotated[int, Path(ge=1, le=9223372036854775807)],
+    user: Annotated[CurrentUser, Depends(require_regular_user)],
+    session: Annotated[Session, Depends(get_db)],
+):
     try:
         return read_mine(session, user.id, reservation_id)
     except ReservationNotFoundError:
@@ -92,11 +117,23 @@ def my_detail(reservation_id: Annotated[int, Path(ge=1, le=9223372036854775807)]
 
 
 @router.post("/{reservation_id}/cancel", summary="开始前取消本人预约")
-def cancel(reservation_id: Annotated[int, Path(ge=1, le=9223372036854775807)], data: CancelRequest, request: Request,
-           user: Annotated[CurrentUser, Depends(require_regular_user)], session: Annotated[Session, Depends(get_db)],
-           csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None):
+def cancel(
+    reservation_id: Annotated[int, Path(ge=1, le=9223372036854775807)],
+    data: CancelRequest,
+    request: Request,
+    user: Annotated[CurrentUser, Depends(require_regular_user)],
+    session: Annotated[Session, Depends(get_db)],
+    csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None,
+):
     try:
-        return cancel_mine(session, user.id, reservation_id, request.cookies.get(SESSION_COOKIE_NAME), csrf_token, data.reason.strip() or None if data.reason else None)
+        return cancel_mine(
+            session,
+            user.id,
+            reservation_id,
+            request.cookies.get(SESSION_COOKIE_NAME),
+            csrf_token,
+            data.reason.strip() or None if data.reason else None,
+        )
     except ReservationNotFoundError:
         raise HTTPException(404, "预约不存在。") from None
     except CancellationConflictError:

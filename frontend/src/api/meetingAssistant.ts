@@ -45,36 +45,10 @@ export interface ConversationView {
   confirmation: AssistantConfirmation | null
 }
 
-function options(csrfToken: string, signal?: AbortSignal) {
-  return { headers: { 'X-CSRF-Token': csrfToken }, timeout: 65_000, signal }
-}
-
-function conversationPath(id: string) {
-  return `/assistant/conversations/${encodeURIComponent(id)}`
-}
-
 export const meetingAssistantApi = {
-  async start(message: string, csrfToken: string, signal?: AbortSignal): Promise<ConversationView> {
-    const { data } = await http.post<ConversationView>('/assistant/conversations/start', { message }, options(csrfToken, signal))
-    return data
-  },
-  async message(id: string, revision: number, message: string, csrfToken: string, signal?: AbortSignal): Promise<ConversationView> {
-    const { data } = await http.post<ConversationView>(`${conversationPath(id)}/message`, { revision, message }, options(csrfToken, signal))
-    return data
-  },
-  async select(id: string, revision: number, roomId: number, csrfToken: string, signal?: AbortSignal): Promise<ConversationView> {
-    const { data } = await http.post<ConversationView>(`${conversationPath(id)}/select`, { revision, room_id: roomId }, options(csrfToken, signal))
-    return data
-  },
-  async showAll(id: string, revision: number, csrfToken: string, signal?: AbortSignal): Promise<ConversationView> {
-    const { data } = await http.post<ConversationView>(`${conversationPath(id)}/candidates`, { revision, show_all: true }, options(csrfToken, signal))
-    return data
-  },
-  async prepare(id: string, revision: number, csrfToken: string, signal?: AbortSignal): Promise<ConversationView> {
-    const { data } = await http.post<ConversationView>(`${conversationPath(id)}/prepare`, { revision }, options(csrfToken, signal))
-    return data
-  },
   async close(id: string, csrfToken: string): Promise<void> {
-    await http.delete(conversationPath(id), options(csrfToken))
+    await http.delete(`/assistant/conversations/${encodeURIComponent(id)}`, {
+      headers: { 'X-CSRF-Token': csrfToken }, timeout: 65_000,
+    })
   },
 }

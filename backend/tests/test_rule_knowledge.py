@@ -65,7 +65,7 @@ def isolated_index(tmp_path):
 
 def test_published_snapshot_covers_all_current_rules_and_stable_sources(tmp_path):
     catalog = load_catalog(snapshot(tmp_path))
-    assert catalog.version == "V2.0-r6"
+    assert catalog.version == "V2.0-r6+20261111"
     assert len(catalog.chunks) >= 17
     assert {c["section"] for c in catalog.chunks} == {"ROLE", *(f"BR{i:02}" for i in range(1,17))}
     assert len({c["id"] for c in catalog.chunks}) == len(catalog.chunks)

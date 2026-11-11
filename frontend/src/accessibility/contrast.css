@@ -1,0 +1,87 @@
+html[data-high-contrast] {
+  color: #111;
+  background: #fff;
+  --navy: #111;
+  --muted: #222;
+  --border: #555;
+  --teal: #003aa8;
+  --el-text-color-primary: #111;
+  --el-text-color-regular: #222;
+  --el-text-color-secondary: #333;
+  --el-text-color-placeholder: #555;
+  --el-border-color: #555;
+  --el-border-color-light: #666;
+  --el-border-color-lighter: #777;
+  --el-border-color-extra-light: #777;
+}
+
+html[data-high-contrast] a,
+html[data-high-contrast] .el-button.is-link {
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+
+html[data-high-contrast] :focus-visible {
+  outline: 3px solid #003aa8;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* Keep the status text visible and give every badge a clear boundary. */
+html[data-high-contrast] .el-tag:not(.el-tag--dark) {
+  --el-tag-bg-color: #fff;
+  --el-tag-text-color: #111;
+  --el-tag-border-color: #555;
+  font-weight: 600;
+}
+
+html[data-high-contrast] .el-table {
+  --el-table-header-text-color: #111;
+  --el-table-border-color: #666;
+}
+
+/* State labels carry the meaning. Shape and border reinforce it without relying on hue. */
+html[data-high-contrast] [data-status-cue] {
+  --status-ink: #303030;
+  --status-border: solid;
+  --status-symbol: "–";
+  color: var(--status-ink);
+  border-inline-start: 3px var(--status-border) var(--status-ink);
+  padding-inline-start: .3em;
+  font-weight: 600;
+  white-space: normal;
+}
+
+html[data-high-contrast] [data-status-cue]::after {
+  content: var(--status-symbol) / "";
+  margin-inline-start: .25em;
+}
+
+html[data-high-contrast] .resource-state[data-status-cue]::before {
+  display: none;
+}
+
+html[data-high-contrast] :is([data-status-cue="approved"], [data-status-cue="available"], [data-status-cue="active"]) {
+  --status-ink: #003aa8;
+  --status-symbol: "✓";
+}
+
+html[data-high-contrast] :is([data-status-cue="pending"], [data-status-cue="unread"]) {
+  --status-ink: #754000;
+  --status-border: dashed;
+  --status-symbol: "◷";
+}
+
+html[data-high-contrast] [data-status-cue="unread"] {
+  --status-symbol: "◆";
+}
+
+html[data-high-contrast] [data-status-cue="occupied"] {
+  --status-border: double;
+  --status-symbol: "■";
+}
+
+html[data-high-contrast] :is([data-status-cue="rejected"], [data-status-cue="revoked"], [data-status-cue="cancelled"]) {
+  --status-border: double;
+  --status-symbol: "×";
+}

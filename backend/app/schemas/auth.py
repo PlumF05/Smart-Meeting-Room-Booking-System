@@ -1,18 +1,22 @@
 """注册输入和输出；密码及确认密码不会成为响应字段。"""
 
-from typing import Annotated, Literal, Self
 from datetime import datetime
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints, model_validator
-
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SecretStr,
+    StringConstraints,
+    model_validator,
+)
 
 IdentityType = Literal["teacher", "student"]
 
 
 class RegistrationRequest(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid", strict=True, hide_input_in_errors=True
-    )
+    model_config = ConfigDict(extra="forbid", strict=True, hide_input_in_errors=True)
 
     username: Annotated[
         str, StringConstraints(strip_whitespace=True, min_length=1, max_length=64)
