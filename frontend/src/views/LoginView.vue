@@ -7,6 +7,8 @@ import {
   ElForm,
   ElFormItem,
   ElInput,
+  ElSelect,
+  ElOption,
   type FormInstance,
   type FormRules,
 } from "element-plus";
@@ -24,6 +26,52 @@ const form = reactive({
   username: auth.takeRegistrationUsername(),
   password: "",
 });
+
+interface DemoAccount {
+  label: string;
+  username: string;
+  password: string;
+}
+
+function loadDemoAccounts(): DemoAccount[] {
+  if (!import.meta.env.DEV) return [];
+
+  const raw = import.meta.env.VITE_DEMO_ACCOUNTS;
+  if (!raw) return [];
+
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (!Array.isArray(value)) return [];
+
+    return value.filter(
+      (item): item is DemoAccount =>
+        item !== null &&
+        typeof item === "object" &&
+        typeof item.label === "string" &&
+        typeof item.username === "string" &&
+        typeof item.password === "string" &&
+        item.username.trim().length > 0 &&
+        item.password.trim().length > 0,
+    );
+  } catch {
+    return [];
+  }
+}
+
+const demoAccounts = loadDemoAccounts();
+const selectdDemoUsername = ref("");
+
+function fillDemoAccount(username: string) {
+  const account = demoAccounts.find((item) => item.username === username);
+  if (!account) return;
+
+  form.username = account.username;
+  form.password = account.password;
+
+  errorMessage.value = "";
+  formRef.value?.clearValidate(["username", "password"]);
+}
+
 const rules: FormRules<typeof form> = {
   username: [
     { required: true, message: "请输入登录名", trigger: "blur" },
@@ -95,6 +143,26 @@ onBeforeUnmount(() => {
       hide-required-asterisk
       @submit.prevent="submit"
     >
+      <ElFormItem
+        v-if="demoAccounts.length > 0"
+        label="测试账号"
+        for="demo-account-select"
+      >
+        <ElSelect
+          id="demo-account-select"
+          v-model="selectdDemoUsername"
+          placeholder="选择测试账号"
+          style="width: 100%"
+          @change="fillDemoAccount"
+        >
+          <ElOption
+            v-for="account in demoAccounts"
+            :key="account.username"
+            :label="`${account.label}(${account.username})`"
+            :value="account.username"
+          />
+        </ElSelect>
+      </ElFormItem>
       <ElFormItem label="用户名" prop="username">
         <ElInput
           v-model="form.username"

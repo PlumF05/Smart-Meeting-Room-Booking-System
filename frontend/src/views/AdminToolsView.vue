@@ -480,7 +480,7 @@ onBeforeUnmount(() => {
     <ElTabs v-model="tab">
       <ElTabPane label="账号管理" name="users">
         <ElForm
-          class="tool-filters"
+          class="tool-filters user-filters"
           inline
           :disabled="usersLoading || writing"
           @submit.prevent="searchUsers"
@@ -956,6 +956,15 @@ onBeforeUnmount(() => {
 }
 .tool-filters .el-form-item {
   margin-right: 18px;
+}
+.user-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+.user-filters .el-form-item {
+  margin: 0;
 }
 .tool-filters :deep(.date-input) {
   width: 165px;

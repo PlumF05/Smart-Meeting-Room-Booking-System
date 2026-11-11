@@ -1,0 +1,172 @@
+{
+  "backend": {
+    "tests/test_health.py": [
+      "test_application_and_docs_do_not_depend_on_database",
+      "test_missing_configuration_returns_503_without_connecting",
+      "test_database_failure_is_sanitized_and_disposes_engine[connect]"
+    ],
+    "tests/test_registration_mysql.py": [
+      "test_registration_persists_hashed_password_and_only_safe_fields[student]",
+      "test_collation_equivalent_username_returns_conflict",
+      "test_two_independent_connections_cannot_register_the_same_username"
+    ],
+    "tests/test_login_mysql.py": [
+      "test_login_sets_cookie_and_only_returns_safe_session_info",
+      "test_unknown_wrong_password_and_disabled_account_share_safe_401",
+      "test_switching_account_revokes_previous_browser_session",
+      "test_logout_revokes_session_and_replayed_cookie_stays_invalid",
+      "test_trusted_origin_is_allowed_and_csrf_is_bound_to_session"
+    ],
+    "tests/test_rooms_mysql.py": [
+      "test_multiple_filter_types_are_combined",
+      "test_anonymous_cannot_read_list_or_detail",
+      "test_both_roles_can_read_current_room_details_without_private_or_availability_fields[student]"
+    ],
+    "tests/test_booking_time.py": [
+      "test_legal_boundaries_return_a_same_day_beijing_window[day0-start0-end0]",
+      "test_only_today_through_day_six_is_inside_the_booking_window[7]",
+      "test_start_must_be_strictly_later_than_current_time_to_microsecond",
+      "test_utc_clock_is_converted_before_deciding_today_and_the_seventh_day",
+      "test_holidays_and_weekends_follow_the_same_confirmed_rules[day0-now0]"
+    ],
+    "tests/test_room_window_mysql.py": [
+      "test_valid_window_is_aware_beijing_but_does_not_reserve_a_room",
+      "test_invalid_format_partial_and_unknown_parameters_are_rejected"
+    ],
+    "tests/test_reservation_submission_mysql.py": [
+      "test_submit_saves_pending_snapshot_event_and_all_admin_messages_atomically",
+      "test_room_and_cross_room_personal_conflicts_are_safe_and_adjacent_is_allowed",
+      "test_ten_independent_connections_create_exactly_one_hold[same_room]",
+      "test_ten_independent_connections_create_exactly_one_hold[same_user]",
+      "test_event_message_and_commit_failure_roll_back_whole_submission[commit]",
+      "test_waiting_for_room_lock_rechecks_time_and_latest_room_values",
+      "test_token_of_another_user_cannot_authorize_claimed_applicant",
+      "test_csrf_failure_creates_nothing",
+      "test_started_pending_is_ignored_but_in_progress_approved_still_holds"
+    ],
+    "tests/test_optional_booking_mysql.py": [
+      "test_page_submission_accepts_omitted_blank_and_null_details[values0]",
+      "test_page_submission_accepts_omitted_blank_and_null_details[values1]",
+      "test_page_submission_accepts_omitted_blank_and_null_details[values2]",
+      "test_assistant_minimum_fields_select_summary_and_submit"
+    ],
+    "tests/test_my_reservations_mysql.py": [
+      "test_api_mine_detail_cancel_repeat_release_and_resubmit",
+      "test_other_user_cannot_read_or_cancel_and_admin_cannot_access",
+      "test_cancel_start_boundary[0-approved]"
+    ],
+    "tests/test_management_mysql.py": [
+      "test_admin_decisions_messages_and_retries[approve-approved-None]",
+      "test_admin_decisions_messages_and_retries[reject-rejected-\\u7528\\u9014\\u4e0d\\u7b26]",
+      "test_roles_csrf_and_origin",
+      "test_active_booking_protects_location_capacity_and_disable[change0]",
+      "test_active_booking_protects_location_capacity_and_disable[change1]",
+      "test_active_booking_protects_location_capacity_and_disable[change2]",
+      "test_approved_equipment_edit_keeps_status_and_exposes_current_and_snapshot_details",
+      "test_started_pending_expires_without_late_approval_or_rejection",
+      "test_concurrent_approve_cancel_always_ends_cancelled"
+    ],
+    "tests/test_followup_mysql.py": [
+      "test_single_reminder_flags_and_unchanged_reservation",
+      "test_ten_real_connections_only_one_reminder_event",
+      "test_message_owner_pagination_mark_read_and_replay",
+      "test_statistics_beijing_submission_date_boundaries_current_status_and_room",
+      "test_account_search_disable_preview_session_revocation_and_preserved_booking",
+      "test_bulk_occupancy_has_all_rooms_and_no_private_details",
+      "test_admin_protection_sensitive_fields_and_audit_read_only"
+    ],
+    "tests/test_optional_assistant_prompts.py": [
+      "test_optional_detail_question_does_not_block_candidates_or_summary",
+      "test_mixed_required_and_optional_ambiguity_still_requires_time_clarification"
+    ],
+    "tests/test_meeting_conversation.py": [
+      "test_failed_model_turn_restores_waitpoint_and_retry_applies_once",
+      "test_no_match_keeps_constraints_and_distinguishes_personal_conflict",
+      "test_owner_token_revision_selection_and_busy_checks_do_not_advance_state"
+    ],
+    "tests/test_assistant_confirmations_mysql.py": [
+      "test_0005_round_trip_preserves_old_tables_and_matches_metadata",
+      "test_exact_five_minute_boundary[300-False]",
+      "test_owner_conversation_session_and_revision_binding"
+    ],
+    "tests/test_assistant_submission_mysql.py": [
+      "test_page_and_assistant_compete_under_same_parent_locks[room]",
+      "test_page_and_assistant_compete_under_same_parent_locks[person]",
+      "test_ten_real_connections_same_confirmation_create_exactly_one_reservation",
+      "test_reservation_operation_messages_and_receipt_roll_back_together[receipt]",
+      "test_result_read_failure_does_not_resubmit_committed_operation"
+    ],
+    "tests/test_assistant_chat_mysql.py": [
+      "test_multiturn_candidates_and_auto_summary_are_read_only",
+      "test_explicit_confirm_submits_once_and_replay_reads_current_status",
+      "test_room_taken_after_summary_refuses_without_automatic_replacement",
+      "test_session_revoked_while_model_runs_cannot_receive_view"
+    ],
+    "tests/test_rule_knowledge.py": [
+      "test_published_snapshot_covers_all_current_rules_and_stable_sources"
+    ],
+    "tests/test_rules_api_mysql.py": [
+      "test_real_session_csrf_role_and_no_business_writes"
+    ],
+    "tests/test_stage7_acceptance.py": [
+      "test_stage7_real_http_backup_restore_and_process_restart"
+    ]
+  },
+  "frontend": {
+    "tests/auth.test.ts": [
+      "恢复登录的401表示匿名，503保留未知状态并提供连接错误",
+      "退出的CSRF失效会更新当前身份并要求确认，不自动退出另一个账号",
+      "接口校验异常保留有用字段错误，不保留含密码的Axios请求对象"
+    ],
+    "tests/rooms-state.test.ts": [
+      "非法输入不请求接口，也不继续展示上一批结果",
+      "同账号重新登录也清理上一登录的条件和详情"
+    ],
+    "tests/room-window.test.ts": [
+      "部分时间本地拒绝，服务器拒绝过期开始时间也不继续读资料且保留表单",
+      "占用结果保留冲突和停用房间及同房间多个占位，未填时间不携带旧状态",
+      "旧占用成功或失败不能覆盖重置或新查询结果"
+    ],
+    "tests/booking-dialog.test.ts": [
+      "提交遇到冲突时清除上一轮无占位提示并保留表单",
+      "提交网络失败保留完整草稿并提示先核对实际预约记录，不自动重试",
+      "离开弹窗后旧查询的401不得再触发会话恢复"
+    ],
+    "tests/management.test.ts": [
+      "驳回或撤销未填写原因时保留弹窗且不发送写请求",
+      "审批或房间保存冲突时保留编辑内容并显示需处置的编号"
+    ],
+    "tests/stage6-ui.test.ts": [
+      "空白预约草稿继承已应用时间人数设备，保留失败草稿并复制设备数组",
+      "催办发送空JSON和当前CSRF，处理中阻止重复，显示服务端消息并刷新本人列表"
+    ],
+    "tests/admin-tools-inbox.test.ts": [
+      "消息读取使用筛选分页，标记已读发送CSRF且仅在服务端确认后变更",
+      "停用成功发送CSRF，显示已有预约并保留预约编号供处置",
+      "操作记录仅GET按对象和分页筛选，保留服务端前后状态和原因"
+    ],
+    "tests/text-size.test.ts": [
+      "标准与大号可以双向即时切换，并保存各次选择",
+      "重新创建偏好模块仍恢复上次选择，模拟刷新页面",
+      "保存失败不阻止当前页面改变字号，也不抛出未处理异常"
+    ],
+    "tests/assistant-rules-chat.test.ts": [
+      "自动区分通用规则、实时查房、预约条件和确认语句",
+      "规则问答进入同一聊天记录，保留来源、预约草稿和当前确认凭证",
+      "规则请求防重复提交，换会话后中止并忽略迟到回复"
+    ],
+    "tests/assistant-chat.test.ts": [
+      "HTTP 200中的error仍视为失败；无done、无业务结果及非法JSON不能当成功",
+      "完整摘要自动展示，按钮确认带当前凭证；双击处理中不会重复请求",
+      "确认连接中断不自动重试，先check核对实际结果；未核对时阻止继续提交与新对话"
+    ],
+    "tests/assistant-voice.test.ts": [
+      "模拟语音闭环：查询、选房、完整摘要、明确确认、实际待审批记录，完成后不再开启麦克风",
+      "连续语音同时开启自动朗读时每轮只播放一次，不重复播放助手回复"
+    ],
+    "tests/voice-io.test.ts": [
+      "末次result静默2秒才stop，等待stop后的末次final和正常end",
+      "正常朗读等待原生onend后才resolve，清理超时计时器"
+    ]
+  }
+}
