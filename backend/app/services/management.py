@@ -3,7 +3,6 @@ import secrets
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.orm import Session
 
 from app.core.errors import DatabaseUnavailableError
 from app.core.reservation_enums import RESERVATION_STATUS_LABELS, ReservationStatus
@@ -85,7 +84,7 @@ def decide(session, reservation_id, data: DecisionInput, *, actor_id, raw_token,
                                        .execution_options(populate_existing=True))
             room = session.scalar(select(MeetingRoom).where(MeetingRoom.id == refs.room_id).with_for_update()
                                   .execution_options(populate_existing=True))
-            now = _authenticate_admin(session, actor_id, raw_token, csrf_token)
+            _authenticate_admin(session, actor_id, raw_token, csrf_token)
             record = session.scalar(select(Reservation).where(Reservation.id == reservation_id).with_for_update()
                                     .execution_options(populate_existing=True))
             # 等预约行锁也可能跨过开始时刻，所以在所有锁完成后再次取时间并验证会话。
@@ -154,9 +153,9 @@ def update_room(session, room_id, data: RoomUpdate, *, actor_id, raw_token, csrf
                     Reservation.room_id == room_id,
                     or_(and_(Reservation.status == "pending", Reservation.starts_at > now),
                         and_(Reservation.status == "approved", Reservation.ends_at > now)),
-                ).order_by(Reservation.id)))
+                ).order_by(Reservation.id).limit(20)))
                 if ids:
-                    raise ManagementError("存在未结束的有效预约，请先处理记录编号：" + "、".join(map(str, ids[:20])))
+                    raise ManagementError("存在未结束的有效预约，请先处理记录编号：" + "、".join(map(str, ids)))
             duplicate = session.scalar(select(MeetingRoom.id).where(MeetingRoom.name == data.name, MeetingRoom.id != room_id))
             if duplicate is not None:
                 raise ManagementError("会议室名称已存在。")

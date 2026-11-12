@@ -7,11 +7,11 @@
     ],
     "tests/test_registration_mysql.py": [
       "test_registration_persists_hashed_password_and_only_safe_fields[student]",
-      "test_collation_equivalent_username_returns_conflict",
+      "test_collation_equivalent_username_returns_conflict[case_unique_account-CASE_UNIQUE_ACCOUNT]",
       "test_two_independent_connections_cannot_register_the_same_username"
     ],
     "tests/test_login_mysql.py": [
-      "test_login_sets_cookie_and_only_returns_safe_session_info",
+      "test_login_sets_cookie_and_only_returns_safe_session_info[user-student]",
       "test_unknown_wrong_password_and_disabled_account_share_safe_401",
       "test_switching_account_revokes_previous_browser_session",
       "test_logout_revokes_session_and_replayed_cookie_stays_invalid",
@@ -30,19 +30,19 @@
       "test_holidays_and_weekends_follow_the_same_confirmed_rules[day0-now0]"
     ],
     "tests/test_room_window_mysql.py": [
-      "test_valid_window_is_aware_beijing_but_does_not_reserve_a_room",
-      "test_invalid_format_partial_and_unknown_parameters_are_rejected"
+      "test_valid_window_is_aware_beijing_but_does_not_reserve_a_room[student]",
+      "test_invalid_format_partial_and_unknown_parameters_are_rejected[query0]"
     ],
     "tests/test_reservation_submission_mysql.py": [
-      "test_submit_saves_pending_snapshot_event_and_all_admin_messages_atomically",
+      "test_submit_saves_pending_snapshot_event_and_all_admin_messages_atomically[student]",
       "test_room_and_cross_room_personal_conflicts_are_safe_and_adjacent_is_allowed",
       "test_ten_independent_connections_create_exactly_one_hold[same_room]",
       "test_ten_independent_connections_create_exactly_one_hold[same_user]",
       "test_event_message_and_commit_failure_roll_back_whole_submission[commit]",
-      "test_waiting_for_room_lock_rechecks_time_and_latest_room_values",
+      "test_waiting_for_room_lock_rechecks_time_and_latest_room_values[start_passed]",
       "test_token_of_another_user_cannot_authorize_claimed_applicant",
-      "test_csrf_failure_creates_nothing",
-      "test_started_pending_is_ignored_but_in_progress_approved_still_holds"
+      "test_csrf_failure_creates_nothing[None]",
+      "test_started_pending_is_ignored_but_in_progress_approved_still_holds[approved-True]"
     ],
     "tests/test_optional_booking_mysql.py": [
       "test_page_submission_accepts_omitted_blank_and_null_details[values0]",
@@ -63,7 +63,7 @@
       "test_active_booking_protects_location_capacity_and_disable[change1]",
       "test_active_booking_protects_location_capacity_and_disable[change2]",
       "test_approved_equipment_edit_keeps_status_and_exposes_current_and_snapshot_details",
-      "test_started_pending_expires_without_late_approval_or_rejection",
+      "test_started_pending_expires_without_late_approval_or_rejection[approve]",
       "test_concurrent_approve_cancel_always_ends_cancelled"
     ],
     "tests/test_followup_mysql.py": [
@@ -76,12 +76,12 @@
       "test_admin_protection_sensitive_fields_and_audit_read_only"
     ],
     "tests/test_optional_assistant_prompts.py": [
-      "test_optional_detail_question_does_not_block_candidates_or_summary",
+      "test_optional_detail_question_does_not_block_candidates_or_summary[Please provide title and purpose]",
       "test_mixed_required_and_optional_ambiguity_still_requires_time_clarification"
     ],
     "tests/test_meeting_conversation.py": [
       "test_failed_model_turn_restores_waitpoint_and_retry_applies_once",
-      "test_no_match_keeps_constraints_and_distinguishes_personal_conflict",
+      "test_no_match_keeps_constraints_and_distinguishes_personal_conflict[personal-\\u4e2a\\u4eba\\u65f6\\u95f4\\u51b2\\u7a81]",
       "test_owner_token_revision_selection_and_busy_checks_do_not_advance_state"
     ],
     "tests/test_assistant_confirmations_mysql.py": [
@@ -98,7 +98,7 @@
     ],
     "tests/test_assistant_chat_mysql.py": [
       "test_multiturn_candidates_and_auto_summary_are_read_only",
-      "test_explicit_confirm_submits_once_and_replay_reads_current_status",
+      "test_explicit_confirm_submits_once_and_replay_reads_current_status[None]",
       "test_room_taken_after_summary_refuses_without_automatic_replacement",
       "test_session_revoked_while_model_runs_cannot_receive_view"
     ],

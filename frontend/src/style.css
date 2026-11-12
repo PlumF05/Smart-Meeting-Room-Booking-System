@@ -82,12 +82,6 @@ a:hover {
 .brand-name {
   font-size: 1.125rem;
 }
-.brand-abbreviation {
-  padding-left: 10px;
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 500;
-}
 .account-nav {
   display: flex;
   align-items: center;
@@ -163,58 +157,6 @@ a:hover {
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
-}
-.auth-story {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-width: 0;
-  padding: 47px 38px 36px;
-  background: var(--navy);
-  color: #fff;
-}
-.story-intro {
-  margin: 0 0 24px;
-  color: #c6dce4;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.story-copy h1 {
-  margin: 0;
-  font-size: clamp(2.25rem, calc(4vw * var(--smrbs-text-scale, 1)), 2.875rem);
-  font-weight: 650;
-  letter-spacing: 1px;
-  line-height: 1.4;
-}
-.story-description {
-  margin: 24px 0 0;
-  color: #c6dce4;
-  font-size: 0.875rem;
-  line-height: 1.9;
-}
-.room-plan {
-  display: block;
-  width: calc(100% + 14px);
-  height: auto;
-  margin: 32px -7px 20px;
-  color: #79aebd;
-}
-.story-note {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.story-note-line {
-  width: 30px;
-  height: 1px;
-  flex-shrink: 0;
-  background: #77a4ad;
-}
-.story-note p {
-  margin: 0;
-  color: #c6dce4;
-  font-size: 0.75rem;
-  line-height: 1.6;
 }
 .auth-content {
   display: flex;
@@ -326,30 +268,12 @@ a:hover {
   margin-right: 0;
   padding-inline: 18px;
 }
-.field-help {
-  margin: 9px 0 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-  line-height: 1.6;
-}
 .initial-loading {
   width: 100%;
   padding: 44px 0;
   color: var(--muted);
   text-align: center;
   font-size: 0.9375rem;
-}
-.site-footer {
-  margin-top: auto;
-  padding: 8px 24px 26px;
-  color: var(--muted);
-  text-align: center;
-  font-size: 0.75rem;
-  line-height: 1.8;
-}
-.site-footer span {
-  padding-inline: 7px;
-  color: #8a9ba3;
 }
 .account-layout {
   width: min(1040px, calc(100% - 64px));
@@ -441,43 +365,6 @@ a:hover {
   line-height: 1.6;
   overflow-wrap: anywhere;
 }
-.profile-session {
-  margin: 0;
-  padding: 15px 28px;
-  border-top: 1px solid var(--border);
-  color: var(--muted);
-  background: #f8fafb;
-  font-size: 0.75rem;
-  line-height: 1.7;
-}
-.next-space {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  margin-top: 26px;
-  padding: 28px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #e8f0f2;
-}
-.next-space svg {
-  width: 104px;
-  height: 80px;
-  flex-shrink: 0;
-  color: #698e9a;
-}
-.next-space h2 {
-  margin: 0;
-  font-size: 1.125rem;
-  line-height: 1.6;
-}
-.next-space p {
-  max-width: 540px;
-  margin: 9px 0 0;
-  color: var(--muted);
-  font-size: 0.875rem;
-  line-height: 1.8;
-}
 
 @media (min-width: 1000px) {
   .auth-layout:has(.register-panel) {
@@ -495,17 +382,8 @@ a:hover {
     grid-template-columns: 1fr;
     margin-top: 32px;
   }
-  .auth-story {
-    padding: 36px 28px 30px;
-  }
   .auth-content {
     padding: 36px 30px;
-  }
-  .story-copy h1 {
-    font-size: 2.3125rem;
-  }
-  .desktop-break {
-    display: none;
   }
   .account-layout {
     width: calc(100% - 40px);
@@ -522,9 +400,6 @@ a:hover {
   }
   .brand-name {
     font-size: 0.9375rem;
-  }
-  .brand-abbreviation {
-    display: none;
   }
   .account-nav {
     gap: 20px;
@@ -550,30 +425,6 @@ a:hover {
     min-height: 0;
     border-radius: 10px;
   }
-  .auth-story {
-    padding: 24px 26px;
-  }
-  .story-intro {
-    margin-bottom: 9px;
-    font-size: 0.75rem;
-  }
-  .story-copy h1 {
-    font-size: 1.6875rem;
-    line-height: 1.5;
-    letter-spacing: 0.5px;
-  }
-  .story-copy h1 br {
-    display: none;
-  }
-  .story-description {
-    margin-top: 9px;
-    font-size: 0.75rem;
-    line-height: 1.8;
-  }
-  .room-plan,
-  .story-note {
-    display: none;
-  }
   .auth-content {
     padding: 30px 26px;
   }
@@ -585,13 +436,6 @@ a:hover {
   }
   .form-heading p {
     font-size: 0.8125rem;
-  }
-  .site-footer {
-    font-size: 0.6875rem;
-    padding-inline: 24px;
-  }
-  .site-footer span {
-    padding-inline: 3px;
   }
   .account-layout {
     margin-top: 30px;
@@ -613,26 +457,9 @@ a:hover {
   .profile-details {
     padding: 20px;
   }
-  .profile-session {
-    padding: 14px 20px;
-  }
   .profile-details {
     column-gap: 20px;
     row-gap: 23px;
-  }
-  .next-space {
-    gap: 18px;
-    padding: 20px;
-  }
-  .next-space svg {
-    width: 70px;
-    height: 62px;
-  }
-  .next-space h2 {
-    font-size: 1rem;
-  }
-  .next-space p {
-    font-size: 0.8125rem;
   }
 }
 
@@ -652,9 +479,6 @@ a:hover {
   .account-nav {
     gap: 15px;
   }
-  .auth-story {
-    padding: 22px;
-  }
   .auth-content {
     padding: 28px 22px;
   }
@@ -665,14 +489,6 @@ a:hover {
   }
   .profile-details {
     grid-template-columns: 1fr;
-  }
-  .next-space {
-    align-items: flex-start;
-    gap: 14px;
-  }
-  .next-space svg {
-    width: 52px;
-    height: 45px;
   }
 }
 

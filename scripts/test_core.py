@@ -8,6 +8,8 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
+from xml.etree import ElementTree
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,10 +40,21 @@ def main() -> int:
     print(f"Core regression: {len(backend)} backend + {len(frontend_names)} frontend cases",
           flush=True)
     print("\nBackend", flush=True)
-    backend_result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", *backend],
-        cwd=ROOT / "backend", env=env, check=False,
-    )
+    with tempfile.TemporaryDirectory(prefix="smrbs-test-") as directory:
+        report = Path(directory) / "backend.xml"
+        backend_result = subprocess.run(
+            [sys.executable, "-m", "pytest", "-q", f"--junitxml={report}", *backend],
+            cwd=ROOT / "backend", env=env, check=False,
+        )
+        backend_ok = backend_result.returncode == 0
+        if backend_ok:
+            executed = ElementTree.parse(report).findall(".//testcase")
+            backend_ok = len(executed) == len(backend) and all(
+                case.find("skipped") is None for case in executed
+            )
+            if not backend_ok:
+                print("Backend test selection did not run every core case exactly once.",
+                      file=sys.stderr)
 
     print("\nFrontend", flush=True)
     pattern = "^(?:" + "|".join(re.escape(name) for name in frontend_names) + ")$"
@@ -58,7 +71,7 @@ def main() -> int:
     if counts.get("pass") != str(len(frontend_names)):
         print("Frontend test selection no longer matches the core test list.", file=sys.stderr)
         return 1
-    return backend_result.returncode
+    return 0 if backend_ok else 1
 
 
 if __name__ == "__main__":

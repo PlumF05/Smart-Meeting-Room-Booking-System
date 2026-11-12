@@ -2,15 +2,14 @@
 import asyncio
 import json
 
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from app.api.meeting_assistant import User, Database, Csrf, authorize, recheck
 from app.api.auth_dependencies import require_trusted_origin
-from fastapi import Depends
+from app.api.meeting_assistant import User, Database, Csrf, authorize
 from app.assistant import conversation as flow
 from app.assistant.model import AIConnectionError
 from app.core.ai_config import load_ai_settings
@@ -142,14 +141,13 @@ async def chat(data: ChatInput, request: Request, user: User, db: Database, csrf
                     context = flow.TurnContext(load_ai_settings(),
                         lambda draft: service(find_candidates,user_id=user.id,draft=draft), emit)
                     if data.conversation_id is None:
-                        if normalized in CONFIRM_WORDS: raise flow.ConversationError('confirmation','请先描述需求、选房并核对完整摘要。')
                         view = await rt.start(user.id,token,data.message,context)
                     else:
                         event = {'kind':'select','room_id':data.room_id} if action == 'select' else {'kind':'all'} if action == 'all' else {'kind':'renew'} if normalized in RENEW_WORDS else {'kind':'message','message':data.message}
                         view = await rt.advance(data.conversation_id,user.id,token,data.revision,event,context)
                         if view.revision != data.revision: await invalidate(data.conversation_id,view.revision)
                     view = await attach_confirmation(rt,view)
-                    await recheck(db,token)
+                    await run_in_threadpool(service, get_session_info, raw_token=token)
                     queue.put_nowait(('view',view.model_dump(mode='json')))
         except Exception as error:
             status,message = public_error(error)

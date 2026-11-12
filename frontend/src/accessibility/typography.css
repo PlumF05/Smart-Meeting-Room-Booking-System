@@ -1,6 +1,6 @@
 /* 字号偏好只改变文字尺度；作用于html以覆盖传送到body的弹窗和下拉层。 */
 html[data-text-size="standard"] { font-size: 100%; }
-html[data-text-size="large"] { font-size: 150%; --smrbs-text-scale: 1.5; }
+html[data-text-size="large"] { font-size: 150%; }
 
 :root {
   --el-font-size-extra-large: 1.25rem;

@@ -41,9 +41,8 @@ defineEmits<{ start: []; pause: []; stop: []; replay: []; read: []; stopReading:
 .voice-actions .el-button + .el-button { margin-left: 0; }
 .readout-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 10px; }
 .readout-actions .el-button + .el-button { margin-left: 0; }
-.readout-hint { color: var(--muted); font-size: .75rem; line-height: 1.75; }
-.voice-help, .voice-preview, .voice-error { margin: 8px 0 0; font-size: .75rem; line-height: 1.75; overflow-wrap: anywhere; }
-.voice-help, .voice-preview span { color: var(--muted); }
+.voice-preview, .voice-error { margin: 8px 0 0; font-size: .75rem; line-height: 1.75; overflow-wrap: anywhere; }
+.voice-preview span { color: var(--muted); }
 .voice-error { color: #a2342e; }
 .voice-preview { max-height: 70px; overflow-y: auto; }
 </style>

@@ -13,11 +13,10 @@ def list_messages(session, user_id, page=1, page_size=20, unread_only=False):
     try:
         with session.begin():
             owner = Notification.recipient_user_id == user_id
-            criteria = [owner]
-            if unread_only:
-                criteria.append(Notification.read_at.is_(None))
-            total = session.scalar(select(func.count()).select_from(Notification).where(*criteria))
-            unread = session.scalar(select(func.count()).select_from(Notification).where(owner, Notification.read_at.is_(None)))
+            unread_criteria = (owner, Notification.read_at.is_(None))
+            unread = session.scalar(select(func.count()).select_from(Notification).where(*unread_criteria))
+            criteria = unread_criteria if unread_only else (owner,)
+            total = unread if unread_only else session.scalar(select(func.count()).select_from(Notification).where(owner))
             rows = session.scalars(select(Notification).where(*criteria).order_by(
                 Notification.created_at.desc(), Notification.id.desc()).offset((page - 1) * page_size).limit(page_size)).all()
             return dict(items=[dict(id=row.id, event_id=row.event_id, title=row.title, content=row.content,

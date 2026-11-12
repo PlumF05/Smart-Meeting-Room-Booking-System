@@ -1,10 +1,7 @@
 """短期LangGraph对话。检查点不含密钥/登录凭据，业务工具通过当前请求上下文提供。"""
 
 import asyncio
-import json
-import os
 import secrets
-import sys
 import time
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -12,7 +9,6 @@ from typing import TypedDict
 
 from starlette.concurrency import run_in_threadpool
 
-from app.assistant.knowledge import BACKEND
 from app.assistant.model import AIConnectionError
 from app.schemas.meeting_assistant import ConversationView, Demand, ExtractedDemand
 from app.services.booking_time import BookingTimeError, get_beijing_now

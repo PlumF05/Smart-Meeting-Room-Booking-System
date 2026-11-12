@@ -514,22 +514,6 @@ const occupancyTime = (value: string) =>
   font-size: 0.8125rem;
   line-height: 1.8;
 }
-.server-time-note {
-  margin: 5px 0 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-  line-height: 1.8;
-}
-.time-rule-refresh {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-}
-.time-rule-refresh :deep(.el-button) {
-  flex-shrink: 0;
-  font-size: 0.8125rem;
-}
 .time-rules-error {
   margin-top: 18px;
   color: #8c5931;

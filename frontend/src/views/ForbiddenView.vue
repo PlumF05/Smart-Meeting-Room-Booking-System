@@ -55,12 +55,6 @@ import { RouterLink } from "vue-router";
   font-size: 1.75rem;
   line-height: 1.5;
 }
-.forbidden-page p {
-  margin: 16px 0 28px;
-  color: var(--muted);
-  font-size: 0.9375rem;
-  line-height: 1.8;
-}
 .access-links {
   display: flex;
   align-items: center;
@@ -72,18 +66,5 @@ import { RouterLink } from "vue-router";
 }
 .access-links a:hover {
   text-decoration: underline;
-}
-.back-to-workspace {
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 8px 17px;
-  border-radius: 6px;
-  color: #fff;
-  background: var(--teal);
-}
-.back-to-workspace:hover {
-  color: #fff;
-  background: var(--el-color-primary-dark-2);
 }
 </style>

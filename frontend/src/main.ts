@@ -1,5 +1,5 @@
-import { createApp, watch } from "vue";
-import ElementPlus from "element-plus";
+import { createApp, h, watch } from "vue";
+import { ElConfigProvider } from "element-plus";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 import "element-plus/dist/index.css";
 import "./style.css";
@@ -11,10 +11,11 @@ import { pinia } from "./stores/index.ts";
 import { useAuthStore } from "./stores/auth.ts";
 import { homeRouteFor, roleAllowed } from "./router/permissions.ts";
 
-const app = createApp(App);
+const app = createApp({
+  render: () => h(ElConfigProvider, { locale: zhCn }, () => h(App)),
+});
 app.use(pinia);
 app.use(router);
-app.use(ElementPlus, { locale: zhCn });
 app.mount("#app");
 
 const auth = useAuthStore(pinia);
